@@ -1,8 +1,8 @@
 """Deterministic synthetic manufacturing/IoT data for the workshop.
 
-Reference module (readable, importable). The execution path attendees actually run is the
-self-contained notebook data_gen/load_to_uc.py, which inlines this logic so it works even
-when the repo is not importable as workspace files.
+Reference module (readable, importable). The execution path attendees run is the step-by-step notebook
+notebooks/01_generate_data (which inlines this logic so it works even when the repo is not
+importable as workspace files). This module is the readable reference version.
 """
 from __future__ import annotations
 

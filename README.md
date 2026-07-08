@@ -41,24 +41,32 @@ Full design and rationale: [`docs/design.md`](docs/design.md).
 | 1:10–1:25 | Run analytical query / dashboard, see write-back land | Hands-on |
 | 1:25–1:30 | Productionization + wrap-up | Presentation |
 
-## Repository layout (planned)
+## Repository layout
 
 | Path | Purpose |
 |------|---------|
-| `data-gen/` | Script to create a per-user catalog/schema and populate synthetic Delta tables |
-| `sync/` | Create the Lakebase instance and synced tables (UI walkthrough + CLI/SQL) |
-| `app/` | Complete Streamlit app; write-back left as a guided gap |
-| `analytics/` | The query / dashboard that shows write-back landing in UC |
-| `docs/` | Design spec and facilitator notes |
+| `notebooks/` | Step-by-step Databricks notebooks: `00_start_here`, `01_generate_data`, `04_explore_and_roundtrip` |
+| `data_gen/` | `generate.py` — readable reference module for the synthetic data (the notebook is the run path) |
+| `sync/` | CLI runbooks: create the Lakebase instance, register the UC catalog, create synced tables |
+| `app/` | Streamlit app (`app.py`, `db.py`, `app.yaml`); write-back left as a guided gap |
+| `analytics/` | Round-trip SQL query + dashboard runbook |
+| `docs/` | `concepts.md`, `attendee-runbook.md`, `facilitator-notes.md`, `design.md`, `solutions/` |
 
 ## Learn it yourself
 
 1. **[`docs/concepts.md`](docs/concepts.md)** — the 10-minute mental model (Lakebase vs
    lakehouse, synced tables, the round-trip, app auth). Read first.
-2. **[`docs/attendee-runbook.md`](docs/attendee-runbook.md)** — fully self-contained, copy-paste
-   commands with checkpoints. Build the whole thing solo, including deploying the app and
-   completing the write-back.
-3. **[`docs/facilitator-notes.md`](docs/facilitator-notes.md)** — for running it as a group.
+2. **[`notebooks/`](notebooks/)** — step-by-step Databricks notebooks for the hands-on parts:
+   `00_start_here` (orientation), `01_generate_data` (build the UC data), and
+   `04_explore_and_roundtrip` (query Lakebase + see the round-trip). Run them cell by cell.
+3. **[`docs/attendee-runbook.md`](docs/attendee-runbook.md)** — the full guide start to finish;
+   it drives the notebooks for data/query and gives copy-paste `databricks` CLI commands (with
+   ✅ checks) for the infra steps: creating Lakebase, synced tables, and deploying the app.
+4. **[`docs/facilitator-notes.md`](docs/facilitator-notes.md)** — for running it as a group.
+
+**Notebook vs CLI:** data generation and querying are notebooks (Spark/`%sql`, right next to
+the data); creating the Lakebase instance and deploying the app are `databricks` CLI steps in
+the runbook (that's how you'd really do that infra).
 
 ## Status
 

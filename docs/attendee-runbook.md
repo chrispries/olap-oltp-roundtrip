@@ -40,11 +40,13 @@ echo "EMAIL=$EMAIL  SCHEMA=$SCHEMA  PGDB=$PGDB  LBCAT=$LBCAT  APP=$APP  HOST=$HO
 
 ## Step 1 — Load analytical data into Unity Catalog (~10 min)
 
-Import this repo into the workspace (Git folder), open `data_gen/load_to_uc.py`, **Run all**
-on serverless. It creates `$CATALOG.$SCHEMA` and four Delta tables, then asserts the counts.
+Import this repo into the workspace (Git folder) and open the **notebook**
+[`notebooks/01_generate_data`](../notebooks/01_generate_data.py). Run it cell by cell — it
+walks you through the data model, generates the four tables, writes them as Delta, and
+verifies the counts. (New here? Start at [`notebooks/00_start_here`](../notebooks/00_start_here.py).)
 
-**✅ Check:** last cell prints `✅ All tables loaded into lakebase_workshop.ws_...` (machines
-50, sensor_readings 10000, production_orders 200, maintenance_tickets 120).
+**✅ Check:** the verify cell prints `✅ All four tables loaded into lakebase_workshop.ws_...`
+(machines 50, sensor_readings 10000, production_orders 200, maintenance_tickets 120).
 
 *Why:* this is the "analytical data you already have" — the starting point of the story.
 
@@ -169,7 +171,10 @@ Stuck? Full answer: [`solutions/create_maintenance_ticket.py`](solutions/create_
 ## Step 7 — Close the round-trip (~10 min) 🎉
 
 The ticket you just created in the **app** is now in Postgres. Read it from the **analytical
-layer** — edit `analytics/roundtrip_query.sql` to use your `$LBCAT`, or run:
+layer** — the friendliest way is the notebook
+[`notebooks/04_explore_and_roundtrip`](../notebooks/04_explore_and_roundtrip.py) (explore the
+synced tables, then re-run the round-trip cell after creating a ticket). Or from the CLI —
+edit `analytics/roundtrip_query.sql` to use your `$LBCAT`, or run:
 ```bash
 databricks -p $P api post /api/2.0/sql/statements --json \
   "{\"warehouse_id\":\"$WH\",\"statement\":\"SELECT ticket_id,machine_id,priority,status,description FROM $LBCAT.public.app_maintenance_tickets ORDER BY opened_at DESC\",\"wait_timeout\":\"30s\"}"

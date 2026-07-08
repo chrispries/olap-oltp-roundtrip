@@ -45,8 +45,9 @@ Actual dry-run timings: _recorded in Task 8_.
   GRANT SELECT ON ALL TABLES IN SCHEMA public TO "<sp-client-id>";
   ```
   (Run as the DB owner via psql. The `<sp-client-id>` is the app SP's client id = `PGUSER`.)
-- **Notebook import of `generate.py` fails** — `load_to_uc.py` is self-contained; no import
-  needed. Ignore any `data_gen.generate` import in the reference module.
+- **Notebook import of `generate.py` fails** — the `notebooks/01_generate_data` notebook is
+  self-contained (generation inlined); no repo import needed. `data_gen/generate.py` is just a
+  readable reference module.
 - **App auth (Autoscaling)** — do NOT use a static `PGPASSWORD`. `app/db.py` mints a fresh
   OAuth token per connection via `w.postgres.generate_database_credential(ENDPOINT_NAME)`.
   `ENDPOINT_NAME`, `PGHOST`, `PGDATABASE`, `PGUSER` (= SP client id) are set in `app/app.yaml`.
