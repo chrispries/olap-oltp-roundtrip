@@ -1,0 +1,15 @@
+[project]
+name = "app-lakebase-in-a-day"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "psycopg[binary]>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-postgresql>=6"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
