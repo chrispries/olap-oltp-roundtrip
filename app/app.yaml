@@ -1,0 +1,5 @@
+# Databricks App config.
+# NOTE: the `resources` block that binds this app to the Lakebase instance/database
+# (which injects PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD) is finalized during the live
+# build per the fe-databricks-tools:databricks-apps skill — see sync/create_lakebase.md.
+command: ["streamlit", "run", "app.py"]

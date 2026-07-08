@@ -53,4 +53,10 @@ Full design and rationale: [`docs/design.md`](docs/design.md).
 
 ## Status
 
-Early build. Design approved; implementation plan next.
+Code + docs artifacts built locally (data-gen, app, analytics, runbooks). Live validation on
+Azure FE (data load, Lakebase instance + synced tables, app deploy, round-trip, dry run) is
+pending. Build runs on Databricks — public PyPI is firewalled locally, so all Python
+execution/testing happens on the workspace (see the plan's Revision note).
+
+- Attendee steps: [`docs/attendee-runbook.md`](docs/attendee-runbook.md)
+- Facilitator: [`docs/facilitator-notes.md`](docs/facilitator-notes.md)

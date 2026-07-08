@@ -8,6 +8,26 @@
 
 **Tech Stack:** Python 3.11, pandas + numpy (data generation), Databricks CLI + SDK, Spark (UC writes, in-notebook), Lakebase (Postgres 16), psycopg 3, Streamlit, Databricks Apps, Databricks SQL / AI-BI dashboards. pytest + pytest-postgresql for local tests.
 
+## Revision 2026-07-08 — Databricks-based execution
+
+This machine firewalls public PyPI and has no internal-mirror credentials, so **no local
+Python package installs are possible**. Decision: **all Python execution and testing runs
+on Databricks (Azure FE), not locally.** Consequences applied throughout this plan:
+
+- Local `pip install` / local `pytest` steps are **superseded**. Do not attempt them.
+- **Data-gen validation:** the load notebook (`data_gen/load_to_uc.py`) is **self-contained**
+  (generation inlined, not imported) and asserts the expected row counts inline when run on
+  serverless — that assertion *is* the data-gen test. `data_gen/generate.py` is retained as a
+  readable reference module but is not the execution path.
+- **Write-back test:** `create_maintenance_ticket()` is validated by a Databricks notebook
+  (`tests/test_db_databricks.py`) that `%pip install psycopg`, connects to the **real
+  Lakebase Postgres**, and asserts insert + read-back — an integration test, replacing the
+  local ephemeral-Postgres unit test.
+- **App dependencies** install server-side from `app/requirements.txt` at deploy time — the
+  local firewall does not affect the app.
+- **Build order:** create all code/doc artifacts first (local, reversible), then run the live
+  Azure FE steps (load, Lakebase, deploy, round-trip, dry run) as one coordinated pass.
+
 ## Global Constraints
 
 - **Target workspace:** Azure FE, Databricks CLI profile `azure-demo` (`https://adb-984752964297111.11.azuredatabricks.net`). All `databricks` commands use `-p azure-demo`.
