@@ -9,23 +9,49 @@ import os
 
 import psycopg
 from psycopg.rows import dict_row
+from databricks.sdk import WorkspaceClient
 
 APP_TABLE = "app_maintenance_tickets"
 
+# Fully-qualified Autoscaling endpoint, e.g.
+# "projects/<project>/branches/<branch>/endpoints/<endpoint>". Set in app.yaml.
+ENDPOINT_NAME = os.environ.get("ENDPOINT_NAME")
+
+_ws_client: WorkspaceClient | None = None
+
+
+def _workspace_client() -> WorkspaceClient:
+    """Cache one WorkspaceClient. On Databricks Apps this auto-configures from the
+    app service principal (DATABRICKS_CLIENT_ID / DATABRICKS_CLIENT_SECRET)."""
+    global _ws_client
+    if _ws_client is None:
+        _ws_client = WorkspaceClient()
+    return _ws_client
+
+
+def _fresh_token() -> str:
+    """Mint a short-lived Lakebase OAuth credential for ENDPOINT_NAME via the SDK."""
+    cred = _workspace_client().postgres.generate_database_credential(ENDPOINT_NAME)
+    return cred.token
+
 
 def get_connection() -> psycopg.Connection:
-    """Connect to Lakebase Postgres.
+    """Connect to Lakebase (Autoscaling) Postgres.
 
-    On Databricks Apps the bound Lakebase resource injects PGHOST/PGPORT/PGDATABASE/PGUSER
-    and a short-lived PGPASSWORD (OAuth token). See sync/create_lakebase.md for the binding.
+    Autoscaling issues short-lived OAuth tokens (~1h), so rather than reading a static
+    PGPASSWORD we mint a fresh credential per connection with the Databricks SDK
+    (``w.postgres.generate_database_credential(ENDPOINT_NAME)``). Streamlit reruns the
+    script — and therefore calls this — on each interaction, so every connection gets a
+    valid token. The app's service principal is the Postgres role, so PGUSER defaults to
+    the injected DATABRICKS_CLIENT_ID when not set explicitly.
     """
     return psycopg.connect(
         host=os.environ["PGHOST"],
         port=os.environ.get("PGPORT", "5432"),
         dbname=os.environ["PGDATABASE"],
-        user=os.environ["PGUSER"],
-        password=os.environ["PGPASSWORD"],
-        sslmode="require",
+        user=os.environ.get("PGUSER") or os.environ["DATABRICKS_CLIENT_ID"],
+        password=_fresh_token(),
+        sslmode=os.environ.get("PGSSLMODE", "require"),
     )
 
 

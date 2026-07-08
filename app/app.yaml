@@ -1,5 +1,24 @@
-# Databricks App config.
-# NOTE: the `resources` block that binds this app to the Lakebase instance/database
-# (which injects PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD) is finalized during the live
-# build per the fe-databricks-tools:databricks-apps skill — see sync/create_lakebase.md.
-command: ["streamlit", "run", "app.py"]
+# Databricks App config — Streamlit shop-floor maintenance app.
+#
+# Auth model (Lakebase Autoscaling): the `lakebase-db` postgres resource below binds
+# this app's service principal to the Lakebase branch/database (CAN_CONNECT_AND_CREATE)
+# so it can mint OAuth credentials for the endpoint. db.py generates a fresh token per
+# connection via w.postgres.generate_database_credential(ENDPOINT_NAME) — Autoscaling
+# tokens are short-lived, so no static PGPASSWORD is used.
+command: ["streamlit", "run", "app.py", "--server.port", "8000", "--server.address", "0.0.0.0"]
+env:
+  - name: STREAMLIT_GATHER_USAGE_STATS
+    value: "false"
+  - name: ENDPOINT_NAME
+    value: "projects/lakebase-workshop/branches/production/endpoints/primary"
+  - name: PGHOST
+    value: "ep-floral-rain-e1f9l6le.database.eastus2.azuredatabricks.net"
+  - name: PGDATABASE
+    value: "ws_christopher_pries"
+  - name: PGPORT
+    value: "5432"
+  - name: PGSSLMODE
+    value: "require"
+  # Postgres role for the app service principal == its client id (app-7hspbl lb-workshop-cpries).
+  - name: PGUSER
+    value: "c4a67ecf-ad8e-4e8e-aff1-0eaaf908e5e7"
