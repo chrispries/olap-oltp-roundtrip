@@ -1,25 +1,49 @@
 # Create the shared Lakebase instance + per-user database
 
-> Filled in during the live Azure FE build (Task 3) using the
-> `fe-databricks-tools:databricks-lakebase` skill for exact current commands.
+Lakebase **Autoscaling** tier (`databricks postgres`, scale-to-zero). Tested on Azure FE
+(`azure-demo`) 2026-07-08.
 
-## Instance (facilitator, once)
+## Instance / project (facilitator, once)
 
-- Instance name: `lakebase-workshop`
-- Workspace: Azure FE (`azure-demo`)
-- Steps (UI + CLI): _to be recorded during live build_
+One shared Autoscaling **project** for the whole room:
+
+```bash
+databricks -p azure-demo postgres create-project lakebase-workshop \
+  --json '{"spec": {"display_name": "App + Lakebase in a Day workshop"}}'
+```
+
+This auto-creates a `production` branch and a `primary` read-write endpoint. Get the host:
+
+```bash
+databricks -p azure-demo postgres list-endpoints \
+  projects/lakebase-workshop/branches/production -o json \
+  | python3 -c "import sys,json;print(json.load(sys.stdin)[0]['status']['hosts']['host'])"
+# e.g. ep-floral-rain-e1f9l6le.database.eastus2.azuredatabricks.net
+```
 
 ## Per-user database (each attendee)
 
-- Database name: `ws_${user}` (sanitized email local-part)
-- Steps: _to be recorded_
+Each attendee gets their own Postgres **database** `ws_${user}` on the shared endpoint.
+Create it once with psql (needs `brew install postgresql@16`):
 
-## Connection recipe (used by the app and the write-back test)
+```bash
+export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+HOST=$(databricks -p azure-demo postgres list-endpoints projects/lakebase-workshop/branches/production -o json | python3 -c "import sys,json;print(json.load(sys.stdin)[0]['status']['hosts']['host'])")
+TOKEN=$(databricks -p azure-demo postgres generate-database-credential projects/lakebase-workshop/branches/production/endpoints/primary -o json | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])")
+EMAIL=$(databricks -p azure-demo current-user me -o json | python3 -c "import sys,json;print(json.load(sys.stdin)['userName'])")
+PGPASSWORD=$TOKEN psql "host=$HOST port=5432 dbname=postgres user=$EMAIL sslmode=require" \
+  -c "CREATE DATABASE ws_christopher_pries;"   # substitute your ws_${user}
+```
 
-The deployed app receives `PGHOST` / `PGPORT` / `PGDATABASE` / `PGUSER` / `PGPASSWORD`
-from the bound Lakebase resource. For manual/notebook connections, record here how to
-obtain a short-lived OAuth token and the host/port/database values.
+## Connection recipe (app + write-back test)
 
-- Host: _to be recorded_
+- Host: from `list-endpoints` (above)
 - Port: `5432`
-- Auth: _OAuth token via databricks-lakebase skill — to be recorded_
+- Database: `ws_${user}`
+- User: your Databricks email (`current-user me`)
+- Password: **short-lived OAuth token** from
+  `databricks postgres generate-database-credential .../endpoints/primary` (expires ~1h)
+- `sslmode=require`
+
+The deployed app gets these injected by the bound Lakebase resource (see
+`../app/app.yaml` and the databricks-apps skill).
