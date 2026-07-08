@@ -37,14 +37,37 @@ Actual dry-run timings: _recorded in Task 8_.
 
 ## Common failure modes
 
+- **App can read its own table but not the synced tables** — binding the Lakebase database
+  resource as `CAN_CONNECT_AND_CREATE` does **not** auto-grant SELECT on the *pre-existing*
+  synced tables to the app's service-principal Postgres role. Grant it explicitly (once):
+  ```sql
+  GRANT USAGE ON SCHEMA public TO "<sp-client-id>";
+  GRANT SELECT ON ALL TABLES IN SCHEMA public TO "<sp-client-id>";
+  ```
+  (Run as the DB owner via psql. The `<sp-client-id>` is the app SP's client id = `PGUSER`.)
 - **Notebook import of `generate.py` fails** — `load_to_uc.py` is self-contained; no import
   needed. Ignore any `data_gen.generate` import in the reference module.
-- **PG env vars not injected** — the app's Lakebase resource binding is missing/misconfigured;
-  re-check `app/app.yaml` `resources` block against the databricks-apps skill.
+- **App auth (Autoscaling)** — do NOT use a static `PGPASSWORD`. `app/db.py` mints a fresh
+  OAuth token per connection via `w.postgres.generate_database_credential(ENDPOINT_NAME)`.
+  `ENDPOINT_NAME`, `PGHOST`, `PGDATABASE`, `PGUSER` (= SP client id) are set in `app/app.yaml`.
 - **Local `pip install` fails** — expected; this repo is built/tested **on Databricks**, not
   locally (public PyPI is firewalled). Use the notebooks, not a local venv.
 - **Snapshot sync shows stale data** — snapshot is one-time; re-create/refresh the synced
   table if the source changed. (Continuous sync is the production answer — talking point.)
+
+## Validated live (2026-07-08, Azure FE `azure-demo`)
+
+The full round-trip was built and verified on the `ws_christopher_pries` namespace:
+data load (50/10000/200/120) → Lakebase project `lakebase-workshop` + 4 snapshot synced
+tables → UC catalog `lakebase_ws_christopher_pries` → deployed Streamlit app
+(`lb-workshop-cpries`, read path confirmed) → wrote a ticket to
+`public.app_maintenance_tickets` → read it back from Databricks SQL. Round-trip closed.
+
+- **Reference app (facilitator, write-back already solved):**
+  https://lb-workshop-cpries-984752964297111.11.azure.databricksapps.com
+- **Repo ships the write-back stubbed** (the attendee gap). The deployed reference app runs
+  the completed version; that divergence is intentional. Answer key:
+  `docs/solutions/create_maintenance_ticket.py`.
 
 ## Productionization talking point (approach B)
 
