@@ -51,12 +51,19 @@ Full design and rationale: [`docs/design.md`](docs/design.md).
 | `analytics/` | The query / dashboard that shows write-back landing in UC |
 | `docs/` | Design spec and facilitator notes |
 
+## Learn it yourself
+
+1. **[`docs/concepts.md`](docs/concepts.md)** — the 10-minute mental model (Lakebase vs
+   lakehouse, synced tables, the round-trip, app auth). Read first.
+2. **[`docs/attendee-runbook.md`](docs/attendee-runbook.md)** — fully self-contained, copy-paste
+   commands with checkpoints. Build the whole thing solo, including deploying the app and
+   completing the write-back.
+3. **[`docs/facilitator-notes.md`](docs/facilitator-notes.md)** — for running it as a group.
+
 ## Status
 
-Code + docs artifacts built locally (data-gen, app, analytics, runbooks). Live validation on
-Azure FE (data load, Lakebase instance + synced tables, app deploy, round-trip, dry run) is
-pending. Build runs on Databricks — public PyPI is firewalled locally, so all Python
-execution/testing happens on the workspace (see the plan's Revision note).
-
-- Attendee steps: [`docs/attendee-runbook.md`](docs/attendee-runbook.md)
-- Facilitator: [`docs/facilitator-notes.md`](docs/facilitator-notes.md)
+Built and **validated end-to-end live on Azure FE** (2026-07-08): data load → Lakebase
+project + snapshot synced tables → UC catalog → deployed Streamlit app → round-trip write-back
+confirmed in Databricks SQL. The repo ships the write-back **stubbed** (the attendee gap);
+answer key in [`docs/solutions/`](docs/solutions/). All Python runs on Databricks (public PyPI
+is firewalled locally — see the plan's Revision note).

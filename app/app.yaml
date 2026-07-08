@@ -1,10 +1,14 @@
 # Databricks App config — Streamlit shop-floor maintenance app.
 #
-# Auth model (Lakebase Autoscaling): the `lakebase-db` postgres resource below binds
-# this app's service principal to the Lakebase branch/database (CAN_CONNECT_AND_CREATE)
-# so it can mint OAuth credentials for the endpoint. db.py generates a fresh token per
-# connection via w.postgres.generate_database_credential(ENDPOINT_NAME) — Autoscaling
-# tokens are short-lived, so no static PGPASSWORD is used.
+# Auth model (Lakebase Autoscaling): the app is bound to the Lakebase database as a
+# `postgres` resource (see the runbook), which provisions a Postgres role for the app's
+# service principal. db.py then mints a fresh short-lived OAuth token per connection via
+# w.postgres.generate_database_credential(ENDPOINT_NAME) — Autoscaling tokens expire ~1h,
+# so there is deliberately NO static PGPASSWORD here.
+#
+# PORTABILITY: ENDPOINT_NAME and PGHOST are the SHARED workshop instance (same for everyone).
+# Change only PGDATABASE to your own per-user database. PGUSER is intentionally omitted so
+# db.py falls back to DATABRICKS_CLIENT_ID (your app's own service-principal id) automatically.
 command: ["streamlit", "run", "app.py", "--server.port", "8000", "--server.address", "0.0.0.0"]
 env:
   - name: STREAMLIT_GATHER_USAGE_STATS
@@ -13,12 +17,14 @@ env:
     value: "projects/lakebase-workshop/branches/production/endpoints/primary"
   - name: PGHOST
     value: "ep-floral-rain-e1f9l6le.database.eastus2.azuredatabricks.net"
+  # 👇 CHANGE THIS to your own database: ws_<your-username>
   - name: PGDATABASE
     value: "ws_christopher_pries"
   - name: PGPORT
     value: "5432"
   - name: PGSSLMODE
     value: "require"
-  # Postgres role for the app service principal == its client id (app-7hspbl lb-workshop-cpries).
-  - name: PGUSER
-    value: "c4a67ecf-ad8e-4e8e-aff1-0eaaf908e5e7"
+  # PGUSER intentionally omitted — db.py uses the injected DATABRICKS_CLIENT_ID (this app's
+  # service principal), so this file needs no per-app edits. To pin it, uncomment:
+  # - name: PGUSER
+  #   value: "<your-app-service-principal-client-id>"
