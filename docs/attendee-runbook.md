@@ -9,18 +9,19 @@ always know you're on track.
 
 ## The steps
 
-| # | Step | Where | How you run it | ✅ Done when |
-|---|------|-------|----------------|--------------|
-| **00** | Start here / orientation | [`notebooks/00_start_here`](../notebooks/00_start_here.py) | Notebook | You understand the flow |
-| **01** | Generate analytical data → UC | [`notebooks/01_generate_data`](../notebooks/01_generate_data.py) | Notebook (Spark) | `✅ All four tables loaded` (50/10000/200/120) |
-| **02** | Create Lakebase + synced tables | [`sync/02_create_lakebase.md`](../sync/02_create_lakebase.md) | CLI | `machines 50` in Postgres **and** via UC SQL |
-| **03** | Deploy the app + write-back | [`docs/03_deploy_app.md`](03_deploy_app.md) | CLI + `app/` code | App shows 50 machines; your new ticket appears |
-| **04** | Explore + close the round-trip | [`notebooks/04_explore_and_roundtrip`](../notebooks/04_explore_and_roundtrip.py) | Notebook (`%sql`) | Your app-written ticket shows up in SQL 🎉 |
+Every step runs as a notebook — just "Run cell" in your workspace. Steps 02 and 03 also have
+a UI path (in the notebook) and a laptop-CLI alternative.
 
-**Why the mix?** Data generation and querying are notebooks (Spark/`%sql`, right next to the
-data). Creating the Lakebase database and deploying the app are infrastructure — you drive
-them with the `databricks` CLI, which is how you'd really do it. Step 02 sets shared shell
-variables that steps 03 and the CLI parts of 04 reuse.
+| # | Step | Notebook | ✅ Done when |
+|---|------|----------|--------------|
+| **00** | Start here / orientation | [`notebooks/00_start_here`](../notebooks/00_start_here.py) | You understand the flow |
+| **01** | Generate analytical data → UC | [`notebooks/01_generate_data`](../notebooks/01_generate_data.py) | `✅ All four tables loaded` (50/10000/200/120) |
+| **02** | Create Lakebase + synced tables | [`notebooks/02_create_lakebase`](../notebooks/02_create_lakebase.py) | `machines 50` via UC SQL |
+| **03** | Deploy the app + write-back | [`notebooks/03_deploy_app`](../notebooks/03_deploy_app.py) | App shows 50 machines; your new ticket appears |
+| **04** | Explore + close the round-trip | [`notebooks/04_explore_and_roundtrip`](../notebooks/04_explore_and_roundtrip.py) | Your app-written ticket shows up in SQL 🎉 |
+
+**Prefer laptop CLI for the infra steps?** Same commands: [`sync/02_create_lakebase.md`](../sync/02_create_lakebase.md)
+and [`docs/03_deploy_app.md`](03_deploy_app.md). Each 02/03 notebook also shows the UI path.
 
 ## Prerequisites
 
@@ -36,10 +37,12 @@ variables that steps 03 and the CLI parts of 04 reuse.
 
 After you're done, using the variables from step 02:
 
+Note the resource-path prefixes — `synced_tables/…` and `catalogs/…` (not the bare name):
+
 ```bash
 databricks -p $P apps delete $APP
-databricks -p $P postgres delete-catalog $LBCAT
-for t in machines sensor_readings production_orders maintenance_tickets; do databricks -p $P postgres delete-synced-table $LBCAT.public.$t; done
+for t in machines sensor_readings production_orders maintenance_tickets; do databricks -p $P postgres delete-synced-table synced_tables/$LBCAT.public.$t; done
+databricks -p $P postgres delete-catalog catalogs/$LBCAT
 TOKEN=$(databricks -p $P postgres generate-database-credential $ENDPOINT -o json | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])")
 PGPASSWORD=$TOKEN psql "host=$HOST port=5432 dbname=postgres user=$EMAIL sslmode=require" -c "DROP DATABASE $PGDB;"
 # facilitator only: databricks -p $P postgres delete-project projects/lakebase-workshop

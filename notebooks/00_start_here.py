@@ -17,26 +17,30 @@
 # MAGIC %md
 # MAGIC ## The sequence
 # MAGIC
-# MAGIC | # | Step | How you run it | Why |
-# MAGIC |---|------|----------------|-----|
-# MAGIC | **00** | Orientation (you're here) | This notebook | — |
-# MAGIC | **01** | Generate analytical data → UC | Notebook `01_generate_data` | Pure Spark/SQL — notebook-native |
-# MAGIC | **02** | Create Lakebase DB, register UC catalog, snapshot synced tables | CLI: `sync/02_create_lakebase.md` | Infra provisioning — done with the `databricks` CLI |
-# MAGIC | **03** | Deploy the Streamlit app + implement the write-back | CLI: `docs/03_deploy_app.md` (code in `app/`) | App create/deploy is a CLI/deploy workflow |
-# MAGIC | **04** | Explore Lakebase + prove the round-trip | Notebook `04_explore_and_roundtrip` | SQL exploration — notebook-native |
+# MAGIC Each step is a **notebook** you run cell by cell. Steps 02 & 03 also show a UI path and
+# MAGIC have a laptop-CLI alternative.
+# MAGIC
+# MAGIC | # | Step | Notebook |
+# MAGIC |---|------|----------|
+# MAGIC | **00** | Orientation (you're here) | this notebook |
+# MAGIC | **01** | Generate analytical data → UC | `01_generate_data` |
+# MAGIC | **02** | Create Lakebase DB + UC catalog + snapshot synced tables | `02_create_lakebase` |
+# MAGIC | **03** | Deploy the Streamlit app + implement the write-back | `03_deploy_app` |
+# MAGIC | **04** | Explore Lakebase + prove the round-trip | `04_explore_and_roundtrip` |
 # MAGIC
 # MAGIC The full map with prerequisites and teardown: `docs/attendee-runbook.md`.
 # MAGIC
-# MAGIC **Why the split?** Data generation and querying live naturally in a notebook (Spark +
-# MAGIC `%sql`, right next to the data). Creating a Lakebase instance and deploying an app are
-# MAGIC infrastructure operations you drive with the `databricks` CLI — the runbook gives you
-# MAGIC copy-paste commands with a ✅ check at every step.
+# MAGIC **How it runs:** every step is a notebook you execute cell by cell in this workspace —
+# MAGIC no laptop setup. The infra steps (02, 03) use the Databricks SDK, and each also shows the
+# MAGIC equivalent UI clicks; if you'd rather drive them from a laptop, the `databricks` CLI
+# MAGIC versions are in `sync/02_create_lakebase.md` and `docs/03_deploy_app.md`.
 
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## Prerequisites
 # MAGIC - Access to this workspace with serverless + a SQL warehouse.
-# MAGIC - The Databricks CLI on your laptop for steps 02–03 (`databricks -p <profile> current-user me`).
-# MAGIC - The shared Lakebase project `lakebase-workshop` exists (facilitator sets it up).
+# MAGIC - This repo opened as a **Workspace Git folder** (so the notebooks and `app/` code are here).
+# MAGIC - The shared Lakebase project `lakebase-workshop` exists (facilitator sets it up; solo
+# MAGIC   learners: notebook 02 shows how to create it).
 # MAGIC
 # MAGIC ➡️ **Next:** open **`01_generate_data`**.

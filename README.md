@@ -45,10 +45,10 @@ Full design and rationale: [`docs/design.md`](docs/design.md).
 
 | Path | Purpose |
 |------|---------|
-| `notebooks/` | Steps **00**, **01**, **04** as Databricks notebooks (`01_generate_data` is the single source for the synthetic data) |
-| `sync/` | Step **02**: `02_create_lakebase.md` — CLI runbook (Lakebase DB + UC catalog + synced tables) |
+| `notebooks/` | All five steps **00–04** as runnable Databricks notebooks (the primary path) |
+| `sync/` | Step **02** laptop-CLI alternative: `02_create_lakebase.md` |
 | `app/` | Step **03** code: Streamlit app (`app.py`, `db.py`, `app.yaml`); write-back left as a guided gap |
-| `docs/` | `concepts.md`, `attendee-runbook.md` (the 00→04 map), `03_deploy_app.md`, `facilitator-notes.md`, `design.md`, `solutions/` |
+| `docs/` | `concepts.md`, `attendee-runbook.md` (the 00→04 map), `03_deploy_app.md` (CLI alt), `facilitator-notes.md`, `design.md`, `solutions/` |
 | `analytics/` | Round-trip SQL query + dashboard runbook |
 
 ## The flow — follow the numbers (00 → 04)
@@ -57,17 +57,19 @@ Read [`docs/concepts.md`](docs/concepts.md) first (10 min), then work the steps 
 Each step is a numbered asset with ✅ checks; the map lives in
 [`docs/attendee-runbook.md`](docs/attendee-runbook.md).
 
-| # | Step | Asset | Run via |
-|---|------|-------|---------|
-| **00** | Start here / orientation | [`notebooks/00_start_here`](notebooks/00_start_here.py) | Notebook |
-| **01** | Generate analytical data → Unity Catalog | [`notebooks/01_generate_data`](notebooks/01_generate_data.py) | Notebook |
-| **02** | Create Lakebase DB + UC catalog + synced tables | [`sync/02_create_lakebase.md`](sync/02_create_lakebase.md) | `databricks` CLI |
-| **03** | Deploy the Streamlit app + write-back | [`docs/03_deploy_app.md`](docs/03_deploy_app.md) + [`app/`](app/) | `databricks` CLI |
-| **04** | Explore Lakebase + close the round-trip | [`notebooks/04_explore_and_roundtrip`](notebooks/04_explore_and_roundtrip.py) | Notebook |
+Every step is a **runnable notebook** — participants just "Run cell" in their own workspace,
+no laptop setup. Each infra step also lists a UI path and a laptop-CLI alternative.
 
-**Why the mix?** Data generation and querying live in notebooks (Spark/`%sql`, next to the
-data). Creating the Lakebase instance and deploying the app are infrastructure — driven with
-the `databricks` CLI, as you'd really do it. Step 02 sets shell variables that 03 and 04 reuse.
+| # | Step | Run in a notebook | Also available as |
+|---|------|-------------------|-------------------|
+| **00** | Start here / orientation | [`notebooks/00_start_here`](notebooks/00_start_here.py) | — |
+| **01** | Generate analytical data → Unity Catalog | [`notebooks/01_generate_data`](notebooks/01_generate_data.py) | — |
+| **02** | Create Lakebase DB + UC catalog + synced tables | [`notebooks/02_create_lakebase`](notebooks/02_create_lakebase.py) | UI (in-notebook) · CLI: [`sync/02_create_lakebase.md`](sync/02_create_lakebase.md) |
+| **03** | Deploy the Streamlit app + write-back | [`notebooks/03_deploy_app`](notebooks/03_deploy_app.py) + [`app/`](app/) | UI (in-notebook) · CLI: [`docs/03_deploy_app.md`](docs/03_deploy_app.md) |
+| **04** | Explore Lakebase + close the round-trip | [`notebooks/04_explore_and_roundtrip`](notebooks/04_explore_and_roundtrip.py) | — |
+
+The infra notebooks (02, 03) use the Databricks SDK, so they run entirely in-workspace; each
+ends with the equivalent UI clicks and points to the laptop-CLI runbook if you prefer that.
 
 For running it as a group: [`docs/facilitator-notes.md`](docs/facilitator-notes.md).
 
