@@ -19,10 +19,13 @@
 # MAGIC
 # MAGIC | # | Step | How you run it | Why |
 # MAGIC |---|------|----------------|-----|
-# MAGIC | **01** | Generate analytical data → UC | **This notebook:** `01_generate_data` | Pure Spark/SQL — notebook-native |
-# MAGIC | **02** | Create Lakebase DB, register UC catalog, snapshot synced tables | **CLI runbook:** `docs/attendee-runbook.md` §2–4 (or `sync/*.md`) | Infra provisioning — done with the `databricks` CLI (that's how you'd really do it) |
-# MAGIC | **03** | Deploy the Streamlit app + implement the write-back | **CLI runbook:** `docs/attendee-runbook.md` §5–6; code in `app/` | App create/deploy is a CLI/deploy workflow |
-# MAGIC | **04** | Explore Lakebase + prove the round-trip | **This notebook:** `04_explore_and_roundtrip` | SQL exploration — notebook-native |
+# MAGIC | **00** | Orientation (you're here) | This notebook | — |
+# MAGIC | **01** | Generate analytical data → UC | Notebook `01_generate_data` | Pure Spark/SQL — notebook-native |
+# MAGIC | **02** | Create Lakebase DB, register UC catalog, snapshot synced tables | CLI: `sync/02_create_lakebase.md` | Infra provisioning — done with the `databricks` CLI |
+# MAGIC | **03** | Deploy the Streamlit app + implement the write-back | CLI: `docs/03_deploy_app.md` (code in `app/`) | App create/deploy is a CLI/deploy workflow |
+# MAGIC | **04** | Explore Lakebase + prove the round-trip | Notebook `04_explore_and_roundtrip` | SQL exploration — notebook-native |
+# MAGIC
+# MAGIC The full map with prerequisites and teardown: `docs/attendee-runbook.md`.
 # MAGIC
 # MAGIC **Why the split?** Data generation and querying live naturally in a notebook (Spark +
 # MAGIC `%sql`, right next to the data). Creating a Lakebase instance and deploying an app are

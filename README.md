@@ -45,27 +45,31 @@ Full design and rationale: [`docs/design.md`](docs/design.md).
 
 | Path | Purpose |
 |------|---------|
-| `notebooks/` | Step-by-step Databricks notebooks: `00_start_here`, `01_generate_data` (the single source for the synthetic data), `04_explore_and_roundtrip` |
-| `sync/` | CLI runbooks: create the Lakebase instance, register the UC catalog, create synced tables |
-| `app/` | Streamlit app (`app.py`, `db.py`, `app.yaml`); write-back left as a guided gap |
+| `notebooks/` | Steps **00**, **01**, **04** as Databricks notebooks (`01_generate_data` is the single source for the synthetic data) |
+| `sync/` | Step **02**: `02_create_lakebase.md` — CLI runbook (Lakebase DB + UC catalog + synced tables) |
+| `app/` | Step **03** code: Streamlit app (`app.py`, `db.py`, `app.yaml`); write-back left as a guided gap |
+| `docs/` | `concepts.md`, `attendee-runbook.md` (the 00→04 map), `03_deploy_app.md`, `facilitator-notes.md`, `design.md`, `solutions/` |
 | `analytics/` | Round-trip SQL query + dashboard runbook |
-| `docs/` | `concepts.md`, `attendee-runbook.md`, `facilitator-notes.md`, `design.md`, `solutions/` |
 
-## Learn it yourself
+## The flow — follow the numbers (00 → 04)
 
-1. **[`docs/concepts.md`](docs/concepts.md)** — the 10-minute mental model (Lakebase vs
-   lakehouse, synced tables, the round-trip, app auth). Read first.
-2. **[`notebooks/`](notebooks/)** — step-by-step Databricks notebooks for the hands-on parts:
-   `00_start_here` (orientation), `01_generate_data` (build the UC data), and
-   `04_explore_and_roundtrip` (query Lakebase + see the round-trip). Run them cell by cell.
-3. **[`docs/attendee-runbook.md`](docs/attendee-runbook.md)** — the full guide start to finish;
-   it drives the notebooks for data/query and gives copy-paste `databricks` CLI commands (with
-   ✅ checks) for the infra steps: creating Lakebase, synced tables, and deploying the app.
-4. **[`docs/facilitator-notes.md`](docs/facilitator-notes.md)** — for running it as a group.
+Read [`docs/concepts.md`](docs/concepts.md) first (10 min), then work the steps in order.
+Each step is a numbered asset with ✅ checks; the map lives in
+[`docs/attendee-runbook.md`](docs/attendee-runbook.md).
 
-**Notebook vs CLI:** data generation and querying are notebooks (Spark/`%sql`, right next to
-the data); creating the Lakebase instance and deploying the app are `databricks` CLI steps in
-the runbook (that's how you'd really do that infra).
+| # | Step | Asset | Run via |
+|---|------|-------|---------|
+| **00** | Start here / orientation | [`notebooks/00_start_here`](notebooks/00_start_here.py) | Notebook |
+| **01** | Generate analytical data → Unity Catalog | [`notebooks/01_generate_data`](notebooks/01_generate_data.py) | Notebook |
+| **02** | Create Lakebase DB + UC catalog + synced tables | [`sync/02_create_lakebase.md`](sync/02_create_lakebase.md) | `databricks` CLI |
+| **03** | Deploy the Streamlit app + write-back | [`docs/03_deploy_app.md`](docs/03_deploy_app.md) + [`app/`](app/) | `databricks` CLI |
+| **04** | Explore Lakebase + close the round-trip | [`notebooks/04_explore_and_roundtrip`](notebooks/04_explore_and_roundtrip.py) | Notebook |
+
+**Why the mix?** Data generation and querying live in notebooks (Spark/`%sql`, next to the
+data). Creating the Lakebase instance and deploying the app are infrastructure — driven with
+the `databricks` CLI, as you'd really do it. Step 02 sets shell variables that 03 and 04 reuse.
+
+For running it as a group: [`docs/facilitator-notes.md`](docs/facilitator-notes.md).
 
 ## Status
 

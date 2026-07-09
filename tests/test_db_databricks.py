@@ -11,7 +11,7 @@
 
 # COMMAND ----------
 # Provide the Lakebase connection the same way the deployed app does. Fill these from
-# sync/create_lakebase.md (host, per-user database, and an OAuth/instance credential).
+# sync/02_create_lakebase.md (host, per-user database, and an OAuth/instance credential).
 import os
 
 os.environ.setdefault("PGHOST", "<lakebase-host>")
