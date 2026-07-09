@@ -149,21 +149,18 @@ Open it — **Machines shows 50 rows**, Open tickets renders. Submitting the tic
 ## Step 6 — Implement the write-back (the payoff, ~15 min)
 
 Open `app/db.py`, find `create_maintenance_ticket()` (it raises `NotImplementedError`). Replace
-the body so it inserts a row and returns the new id:
+the body so it:
 
-```python
-    with conn.cursor() as cur:
-        cur.execute(
-            f"INSERT INTO {APP_TABLE} (machine_id, priority, description) "
-            f"VALUES (%s, %s, %s) RETURNING ticket_id",
-            (machine_id, priority, description),
-        )
-        ticket_id = cur.fetchone()[0]
-    conn.commit()
-    return ticket_id
-```
+1. runs one `INSERT` into `APP_TABLE` with `(machine_id, priority, description)`,
+2. uses `... RETURNING ticket_id` to get the new id back,
+3. `conn.commit()`s, and
+4. returns the `ticket_id`.
+
+Give it a go from the hints in the docstring. Stuck or want to check your work? The full
+answer is in [`solutions/create_maintenance_ticket.py`](solutions/create_maintenance_ticket.py)
+— the single source for the solution.
+
 Redeploy: `databricks -p $P sync ./app $WS --full && databricks -p $P apps deploy $APP --source-code-path $WS`.
-Stuck? Full answer: [`solutions/create_maintenance_ticket.py`](solutions/create_maintenance_ticket.py).
 
 **✅ Check:** in the app, create a ticket (machine 7, high, "vibration alarm") → you see
 `Created ticket #N`, and it appears under Open tickets.

@@ -45,8 +45,7 @@ Full design and rationale: [`docs/design.md`](docs/design.md).
 
 | Path | Purpose |
 |------|---------|
-| `notebooks/` | Step-by-step Databricks notebooks: `00_start_here`, `01_generate_data`, `04_explore_and_roundtrip` |
-| `data_gen/` | `generate.py` — readable reference module for the synthetic data (the notebook is the run path) |
+| `notebooks/` | Step-by-step Databricks notebooks: `00_start_here`, `01_generate_data` (the single source for the synthetic data), `04_explore_and_roundtrip` |
 | `sync/` | CLI runbooks: create the Lakebase instance, register the UC catalog, create synced tables |
 | `app/` | Streamlit app (`app.py`, `db.py`, `app.yaml`); write-back left as a guided gap |
 | `analytics/` | Round-trip SQL query + dashboard runbook |
