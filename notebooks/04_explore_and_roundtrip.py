@@ -96,3 +96,8 @@ display(spark.sql(f"""
 # MAGIC ### ✅ That's the whole loop
 # MAGIC UC → Lakebase → app → back to UC, on one governed platform. For a dashboard over this
 # MAGIC data see `analytics/dashboard.md`.
+# MAGIC
+# MAGIC ### 🧹 Done exploring? Tear down to avoid lingering cost
+# MAGIC When you're finished, clean up your resources (app, synced tables, catalog, database) —
+# MAGIC the commands are in `docs/attendee-runbook.md` (**Step 05 · Teardown**). The shared
+# MAGIC Lakebase project scales to zero when idle, so it's cheap to leave between sessions.

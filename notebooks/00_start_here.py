@@ -39,7 +39,9 @@
 # MAGIC %md
 # MAGIC ## Prerequisites
 # MAGIC - Access to this workspace with serverless + a SQL warehouse.
-# MAGIC - This repo opened as a **Workspace Git folder** (so the notebooks and `app/` code are here).
+# MAGIC - **This repo added as a Workspace Git folder** — if you're not already reading this from
+# MAGIC   one: sidebar **Workspace → (your home) → Create → Git folder**, paste the repo URL, Create.
+# MAGIC   That brings the notebooks **and** the `app/` code into your workspace (step 03 needs both).
 # MAGIC - The shared Lakebase project `lakebase-workshop` exists (facilitator sets it up; solo
 # MAGIC   learners: notebook 02 shows how to create it).
 # MAGIC

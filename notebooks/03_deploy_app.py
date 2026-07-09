@@ -10,8 +10,7 @@
 # MAGIC (01) UC ──▶ (02) Lakebase ──▶ 👉 (03) app ──▶ (04) round-trip
 # MAGIC ```
 # MAGIC
-# MAGIC **Before you start:** open [`../app/app.yaml`](../app/app.yaml) and set `PGDATABASE` to your
-# MAGIC `ws_<username>` (printed in Step 1). One line — that's the only per-person edit.
+# MAGIC No hand-editing needed — Step 1.5 writes your database name into `app/app.yaml` for you.
 
 # COMMAND ----------
 # MAGIC %pip install -U "databricks-sdk>=0.50" "psycopg[binary]>=3.1" -q
@@ -44,7 +43,22 @@ repo_root = nb.rsplit("/notebooks/", 1)[0]
 APP_SRC = f"/Workspace{repo_root}/app"
 
 host = w.postgres.list_endpoints(BRANCH).__next__().as_dict()["status"]["hosts"]["host"]
-print(f"user={user}\nPGDB (set this as PGDATABASE in app/app.yaml)={PGDB}\nAPP={APP}\nAPP_SRC={APP_SRC}")
+print(f"user={user}\nPGDB={PGDB}\nAPP={APP}\nAPP_SRC={APP_SRC}")
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Step 1.5 · Point the app at *your* database
+# MAGIC Writes `PGDATABASE=<your ws_ db>` into `app/app.yaml` so you never hand-edit it (and can't
+# MAGIC accidentally point at someone else's database). Safe to re-run.
+
+# COMMAND ----------
+import re, pathlib
+
+yaml_path = pathlib.Path(f"{APP_SRC}/app.yaml")
+txt = yaml_path.read_text()
+txt = re.sub(r'(- name: PGDATABASE\n\s*value: )"[^"]*"', rf'\g<1>"{PGDB}"', txt)
+yaml_path.write_text(txt)
+print(f"✅ set PGDATABASE={PGDB} in {yaml_path}")
 
 # COMMAND ----------
 # MAGIC %md

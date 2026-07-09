@@ -17,9 +17,10 @@ env:
     value: "projects/lakebase-workshop/branches/production/endpoints/primary"
   - name: PGHOST
     value: "ep-floral-rain-e1f9l6le.database.eastus2.azuredatabricks.net"
-  # 👇 CHANGE THIS to your own database: ws_<your-username>
+  # Set to your own database ws_<username>. Notebook 03 fills this in for you; for the
+  # laptop-CLI path, replace REPLACE_ME per docs/03_deploy_app.md.
   - name: PGDATABASE
-    value: "ws_christopher_pries"
+    value: "REPLACE_ME"
   - name: PGPORT
     value: "5432"
   - name: PGSSLMODE
