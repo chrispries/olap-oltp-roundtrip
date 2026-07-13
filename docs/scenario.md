@@ -1,58 +1,63 @@
 # The scenario — "Keep the line running"
 
 Use this to open the workshop (2–3 minutes). It frames *why* Apps + Lakebase exist, using
-the exact data everyone is about to work with.
+the exact data everyone is about to work with. It's a manufacturing example, but the pattern
+— analytical data that operational people need to act on — is everywhere (logistics, retail,
+fintech, healthcare). No manufacturing background needed.
 
 ## The one-liner
 
-> Manufacturing data already sits in tables in Unity Catalog. But the people who need it most
-> — the technicians keeping machines running — can't work off a data warehouse. **Lakebase +
+> Operational data usually lands in tables in Unity Catalog — great for analytics. But the
+> people who need it most, working in real time, can't work off a data warehouse. **Lakebase +
 > Apps** serve that data operationally, let those people act on it, and play their actions
 > straight back into analytics.
 
 ## The story
 
-**TRUMPF runs 50 CNC machines** — TruLaser, TruBend, TruPunch, TruMatic — across three
-production lines in four plants. Every machine streams telemetry (temperature, vibration,
-spindle load) into the lakehouse, next to its production orders and years of maintenance
-history. The data team already mines all of it: OEE reporting, and a vibration-based
-failure-prediction model.
+Picture a factory with **50 machines** — laser cutters, press brakes, punch presses, milling
+machines. (They're "CNC" machines: *Computer Numerical Control*, meaning computer-controlled
+tools.) Each machine constantly reports how it's doing — temperature, vibration, and how hard
+it's working — into the lakehouse, alongside its production orders and past repairs. The data
+team already uses all of this: productivity reporting (**OEE** — *Overall Equipment
+Effectiveness*, the standard factory scorecard) and a model that predicts breakdowns from
+rising vibration.
 
-**But that intelligence is trapped in dashboards.** At 2 a.m., machine #7's vibration
-climbs past its limit. The night-shift technician isn't going to open a BI dashboard — they
-need a dead-simple app on a tablet: *"Which of my machines need attention right now, and let
-me log what I did about it."*
+**But that intelligence is trapped in dashboards.** At 2 a.m., machine #7 starts vibrating
+past its safe limit. The night-shift technician isn't going to open a BI dashboard — they need
+a dead-simple app on a tablet: *"which of my machines need attention right now, and let me log
+what I did about it."*
 
-That's an **operational** job — instant single-row lookups and writes — and the analytical
-lakehouse isn't built for it. Standing up a separate Postgres and a bespoke sync would mean a
-second system to secure and govern. That's the gap Lakebase + Apps close.
+That's an **operational** job — instant single-record lookups and writes — and an analytical
+lakehouse (built for big scans, not single-row speed) isn't the right tool. Standing up a
+separate database and a custom sync would mean a second system to secure and govern. That's
+the gap Lakebase + Apps close.
 
 ## How the data maps to the round-trip
 
 | Stage | What happens | Data |
 |-------|--------------|------|
-| **Analytical (UC)** | It's already here | `machines`, `sensor_readings`, `production_orders`, `maintenance_tickets` as Delta |
-| **① Sync → Lakebase** | Serve it operationally (ms reads) | synced tables in Postgres |
-| **② Read in the app** | The **Maintenance Cockpit** shows each technician their machines + open alerts | reads synced tables |
-| **③ Write-back** | Technician logs a fix: *"replaced coolant filter on TruLaser #7 — vibration back to normal"* | new row in the app's Postgres table |
-| **④ Back to analytics** | Governed by UC, that action is instantly queryable in SQL — measure MTTR, retrain the failure model | UC federation, no copy |
+| **Analytical (Unity Catalog)** | It's already here | `machines`, `sensor_readings`, `production_orders`, `maintenance_tickets` as Delta tables |
+| **① Sync → Lakebase** | Serve it operationally (millisecond reads) | synced tables in Postgres |
+| **② Read in the app** | The **Maintenance Cockpit** shows each technician their machines + open alerts | reads the synced tables |
+| **③ Write-back** | Technician logs a fix: *"replaced coolant filter on machine #7 — vibration back to normal"* | new row in the app's Postgres table |
+| **④ Back to analytics** | Because it's governed by Unity Catalog, that action is instantly queryable in SQL — measure repair time, retrain the prediction model | UC federation, no copy |
 
 ## The payoff line
 
-> **One governed platform serves both the analyst and the technician — and the technician's
-> actions make the analytics smarter.** No second database to secure, no nightly ETL. From a
-> vibration signal all the way to a wrench on the shop floor, and back to the model that
-> predicted it.
+> **One governed platform serves both the analyst and the person on the floor — and their
+> actions make the analytics smarter.** No second database to secure, no overnight data
+> copying. From an early-warning signal all the way to a fix on the floor, and back to the
+> model that predicted it.
 
 ## The demo hook (what they'll see first)
 
-The seeded data plants four machines that clearly **need attention** — open, high-priority
-tickets with vivid faults and elevated vibration:
+The seeded data plants four machines that clearly **need attention** — each with elevated
+vibration and an open, high-priority ticket:
 
-- **TruLaser #7** — vibration alarm, bearing wear
+- **Machine #7** — vibration alarm, bearing wear
 - **#19** — coolant low
-- **#31** — laser calibration drift
-- **#44** — spindle overheating
+- **#31** — calibration drift
+- **#44** — spindle (the rotating tool) overheating
 
-So when the app opens, it immediately reads as a real cockpit: "these machines need a
-technician now." (Seeded deterministically in `notebooks/01_generate_data`, Step 3.5.)
+So when the app opens, it immediately reads as a real cockpit: "these machines need someone
+now." (Seeded deterministically in `notebooks/01_generate_data`, Step 3.5.)

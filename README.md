@@ -21,31 +21,36 @@ running"). Full design and rationale: [`docs/design.md`](docs/design.md).
 
 ## Scenario — "Keep the line running"
 
-> Manufacturing data already sits in tables in Unity Catalog. But the people who need it most
-> — the technicians keeping machines running — can't work off a data warehouse. **Lakebase +
+*(A manufacturing example — but the pattern fits logistics, retail, fintech, anywhere. No
+manufacturing background needed.)*
+
+> Operational data usually lands in tables in Unity Catalog — great for analytics. But the
+> people who need it most, working in real time, can't work off a data warehouse. **Lakebase +
 > Apps** serve that data operationally, let those people act on it, and play their actions
 > straight back into analytics.
 
-**TRUMPF runs 50 CNC machines** (TruLaser, TruBend, TruPunch, TruMatic) across three lines in
-four plants. Every machine streams telemetry — temperature, vibration, spindle load — into the
-lakehouse, next to its production orders and maintenance history. The data team already mines
-it for OEE reporting and a vibration-based failure model.
+Picture a factory with **50 machines** — laser cutters, press brakes, punch presses, milling
+machines (all "CNC": *Computer Numerical Control*, i.e. computer-controlled tools). Each one
+streams how it's doing — temperature, vibration, load — into the lakehouse, next to its
+production orders and repair history. The data team already mines it for productivity
+reporting (**OEE** — *Overall Equipment Effectiveness*, the standard factory scorecard) and a
+model that predicts breakdowns from rising vibration.
 
 **But that intelligence is trapped in dashboards.** At 2 a.m. machine #7's vibration climbs
-past its limit. The night-shift technician isn't going to open a BI dashboard — they need a
-dead-simple tablet app: *"which of my machines need attention right now, and let me log what I
-did about it."* That's an **operational** job (instant lookups and writes) the analytical
-lakehouse isn't built for — and a separate Postgres would mean a second system to govern.
+past its safe limit. The night-shift technician isn't going to open a BI dashboard — they need
+a dead-simple tablet app: *"which of my machines need attention right now, and let me log what
+I did about it."* That's an **operational** job (instant lookups and writes) the analytical
+lakehouse isn't built for — and a separate database would mean a second system to govern.
 That's the gap Lakebase + Apps close:
 
 1. The data's already in **Unity Catalog** → **sync** it into Lakebase for millisecond serving.
 2. A **Databricks App** — the Maintenance Cockpit — shows each technician their machines + open alerts.
-3. The technician logs a fix (*"replaced coolant filter on TruLaser #7"*) — a **write-back**.
-4. Governed by UC, that action is **instantly queryable in SQL** — measure MTTR, retrain the model.
+3. The technician logs a fix (*"replaced coolant filter on machine #7"*) — a **write-back**.
+4. Governed by UC, that action is **instantly queryable in SQL** — measure repair time, retrain the model.
 
-> **One governed platform serves both the analyst and the technician — and the technician's
-> actions make the analytics smarter.** From a vibration signal to a wrench on the shop floor,
-> and back to the model that predicted it.
+> **One governed platform serves both the analyst and the person on the floor — and their
+> actions make the analytics smarter.** From an early-warning signal to a fix on the floor, and
+> back to the model that predicted it.
 
 The seed plants four machines that clearly need attention (**#7** bearing wear, **#19** coolant
 low, **#31** calibration drift, **#44** spindle overheating), so the app opens like a real

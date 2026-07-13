@@ -63,9 +63,9 @@ import pandas as pd
 SEED = 42
 rng = np.random.default_rng(SEED)
 
-MODELS = ["TruLaser 3030", "TruBend 5130", "TruPunch 5000", "TruMatic 6000"]
+MODELS = ["Laser Cutter", "Press Brake", "Punch Press", "Milling Machine"]
 LINES = ["Line-A", "Line-B", "Line-C"]
-LOCATIONS = ["Ditzingen", "Neukirch", "Hettingen", "Grüsch"]
+LOCATIONS = ["Plant North", "Plant South", "Plant East", "Plant West"]
 PRODUCTS = ["bracket", "panel", "housing", "flange", "rail"]
 FAULTS = ["coolant low", "vibration alarm", "laser calibration", "belt wear", "sensor fault"]
 

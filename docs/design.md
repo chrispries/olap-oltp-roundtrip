@@ -1,8 +1,7 @@
-# TRUMPF Workshop — Databricks Apps + Lakebase Round-Trip
+# Workshop — Databricks Apps + Lakebase Round-Trip
 
 **Date:** 2026-07-08
 **Owner:** Christopher Pries (Sr. SE, CEMEA Manufacturing)
-**Customer:** TRUMPF
 **Target environment:** Azure Field Eng (FE) demo workspace (reuse prior Lakebase workshop setup patterns)
 
 ## Goal
@@ -20,7 +19,7 @@ in the app comes straight back to the analytical layer."_
 ## Audience & format
 
 - **Format:** hands-on build-along.
-- **Audience:** TRUMPF software/data engineers, medium group (9–20).
+- **Audience:** software/data engineers, medium group (9–20).
 - **Language/stack:** **Streamlit (Python)** app — least code, fastest to deploy, ideal
   for a time-boxed hands-on session and a Python-oriented data audience. A **FastAPI +
   React** variant is a possible advanced follow-up (see Out of scope), not the workshop
