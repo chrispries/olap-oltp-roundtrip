@@ -141,6 +141,33 @@ maintenance_tickets.head()
 
 # COMMAND ----------
 # MAGIC %md
+# MAGIC ## Step 3.5 · Seed the story — a few machines that *need attention*
+# MAGIC Deterministically plant four machines with elevated vibration **and** an open,
+# MAGIC high-priority ticket, so the app opens like a real maintenance cockpit ("these need a
+# MAGIC technician now"). See `docs/scenario.md`.
+
+# COMMAND ----------
+# machine_id -> the fault the technician sees
+WATCHLIST = {
+    7:  "vibration alarm — bearing wear",
+    19: "coolant low",
+    31: "laser calibration drift",
+    44: "spindle overheating",
+}
+
+# 1) push recent vibration for these machines well above the ~2.5 mm/s norm
+alarm = sensor_readings["machine_id"].isin(WATCHLIST)
+sensor_readings.loc[alarm, "vibration_mm_s"] = (sensor_readings.loc[alarm, "vibration_mm_s"] + 3.0).round(3)
+
+# 2) make one open, high-priority ticket per watchlist machine (overwrite existing rows so
+#    the row count stays 120 — nothing downstream changes)
+for i, (mid, fault) in enumerate(WATCHLIST.items()):
+    maintenance_tickets.loc[i, ["machine_id", "priority", "status", "description"]] = [mid, "high", "open", fault]
+
+print("watchlist machines (open high-priority):", list(WATCHLIST))
+
+# COMMAND ----------
+# MAGIC %md
 # MAGIC ## Step 4 · Write to Delta (Unity Catalog)
 # MAGIC
 # MAGIC `spark.createDataFrame(pandas_df)` turns each frame into a Spark DataFrame; `.saveAsTable`

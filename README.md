@@ -14,7 +14,8 @@ straight back to the analytical layer._
 - **App stack:** Streamlit (Python) — FastAPI + React is a possible advanced variant
 - **Scenario:** shop-floor predictive maintenance (manufacturing / IoT)
 
-Full design and rationale: [`docs/design.md`](docs/design.md).
+Presenting it? Open with the scenario: [`docs/scenario.md`](docs/scenario.md) ("Keep the line
+running"). Full design and rationale: [`docs/design.md`](docs/design.md).
 
 ![Architecture: the Apps + Lakebase round-trip](docs/architecture.svg)
 
