@@ -12,6 +12,11 @@ those with your workspace admin using the pre-flight test at the bottom.
 
 ---
 
+> **Automate steps 1–2 + the warehouse grant:** run [`../setup/admin_setup.py`](../setup/admin_setup.py)
+> as a workspace admin. It creates the group, adds members, sets entitlements, does the Unity
+> Catalog grants, and grants `CAN_USE` on a warehouse. The two manual bits (Lakebase project
+> access, Apps enablement) are called out in that notebook and in section 3 below.
+
 ## 1. Facilitator setup (once, before the session)
 
 - **Workspace membership** for all attendees, with:

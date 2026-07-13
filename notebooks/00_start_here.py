@@ -42,7 +42,8 @@
 # MAGIC - **This repo added as a Workspace Git folder** — if you're not already reading this from
 # MAGIC   one: sidebar **Workspace → (your home) → Create → Git folder**, paste the repo URL, Create.
 # MAGIC   That brings the notebooks **and** the `app/` code into your workspace (step 03 needs both).
-# MAGIC - The shared Lakebase project `lakebase-workshop` exists (facilitator sets it up; solo
-# MAGIC   learners: notebook 02 shows how to create it).
+# MAGIC - Your workspace admin has run `setup/admin_setup.py` (you're in the
+# MAGIC   `lakebase-workshop-participants` group with the rights you need), and the shared Lakebase
+# MAGIC   project `lakebase-workshop` exists. (Solo? notebook 02 shows how to create the project.)
 # MAGIC
 # MAGIC ➡️ **Next:** open **`01_generate_data`**.

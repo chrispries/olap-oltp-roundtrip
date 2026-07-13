@@ -11,9 +11,12 @@
 ## Pre-provisioning checklist (facilitator, day before)
 
 - [ ] Create Lakebase instance `lakebase-workshop`, record host/catalog in `sync/*.md`.
-- [ ] Confirm `lakebase_workshop` catalog exists and attendees can create schemas.
-- [ ] Confirm a SQL warehouse id for the round-trip query.
-- [ ] Run the full attendee runbook once yourself (see Task 8 dry run).
+- [ ] **Run `setup/admin_setup.py` (workspace admin)** — creates the participant group and grants
+      workspace/SQL entitlements, UC `USE CATALOG`+`CREATE SCHEMA`, `CREATE CATALOG` on metastore,
+      and warehouse `CAN_USE`. See [`roles-and-permissions.md`](roles-and-permissions.md).
+- [ ] Grant the participant group access to the Lakebase project + confirm Apps creation is
+      allowed (the two manual steps `admin_setup.py` prints).
+- [ ] Run the full attendee flow once as a **non-admin** test user (pre-flight, see roles doc).
 
 ## Per-user namespacing (9–20 attendees)
 

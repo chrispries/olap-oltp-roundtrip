@@ -97,8 +97,14 @@ Read [`docs/concepts.md`](docs/concepts.md) first (10 min), then work the steps 
 Each step is a numbered asset with ✅ checks; the map lives in
 [`docs/attendee-runbook.md`](docs/attendee-runbook.md).
 
-Every step is a **runnable notebook** — participants just "Run cell" in their own workspace,
-no laptop setup. Each infra step also lists a UI path and a laptop-CLI alternative.
+**Before the workshop (workspace admin, once):** run [`setup/admin_setup.py`](setup/admin_setup.py)
+— it creates a `lakebase-workshop-participants` group and grants it everything participants
+need (workspace + SQL entitlements, `USE CATALOG`/`CREATE SCHEMA` on `lakebase_workshop`,
+`CREATE CATALOG` on the metastore, `CAN_USE` on a warehouse). Full privilege reference:
+[`docs/roles-and-permissions.md`](docs/roles-and-permissions.md).
+
+Then, every step below is a **runnable notebook** — participants just "Run cell" in their own
+workspace, no laptop setup. Each infra step also lists a UI path and a laptop-CLI alternative.
 
 | # | Step | Run in a notebook | Also available as |
 |---|------|-------------------|-------------------|
