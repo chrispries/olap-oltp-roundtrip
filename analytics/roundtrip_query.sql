@@ -1,18 +1,18 @@
--- Close the round-trip: read the app's write-back from the analytical layer.
+-- Close the round-trip: read the technician's work from the analytical layer.
 --
 -- The Lakebase database is registered in Unity Catalog as catalog `lakebase_ws_<user>`,
--- which federates the WHOLE Postgres database. So the app-owned table
--- `app_maintenance_tickets` (created by the app, not a synced table) is queryable live
--- from Databricks SQL. Create a ticket in the deployed app, then run this — it appears.
+-- which federates the WHOLE Postgres database. So the app-owned table `maintenance_actions`
+-- (claims + resolutions written by the Maintenance Cockpit app) is queryable live from
+-- Databricks SQL. Claim/resolve an alert in the app, then run this — the action appears.
 --
 -- Replace `christopher_pries` with your own ws user. Schema is always `public`.
 
 SELECT
-    ticket_id,
     machine_id,
-    priority,
+    technician,
     status,
-    description,
-    opened_at
-FROM lakebase_ws_christopher_pries.public.app_maintenance_tickets
-ORDER BY opened_at DESC;
+    resolution,
+    claimed_at,
+    resolved_at
+FROM lakebase_ws_christopher_pries.public.maintenance_actions
+ORDER BY COALESCE(resolved_at, claimed_at) DESC;

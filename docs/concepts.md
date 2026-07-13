@@ -19,12 +19,14 @@ in SQL.** That loop — lakehouse → Postgres → app → back to lakehouse —
 | **Synced table** | A **read-only** copy of a Delta table, continuously/one-time mirrored *into* Lakebase Postgres | A materialized replica / read replica |
 | **Databricks App** | A container (here: Streamlit) that runs next to your data and talks to Lakebase over normal Postgres | A small web app with a Postgres connection |
 
-## Why two tables for tickets? (the key insight)
+## Why two tables? (the key insight)
 
 Synced tables are **read-only** in Postgres — they're replicas of Delta, so you can't
-`INSERT` into them. So the app reads the seeded `maintenance_tickets` (a synced table) but
-**writes** new tickets to its *own* ordinary Postgres table, `app_maintenance_tickets`.
-That's a normal pattern: replicate reference data in, own your transactional data.
+`INSERT`/`UPDATE` them. So the app *reads* the seeded alerts from `maintenance_tickets` (a
+synced table) but *writes* the technician's work — who claimed an alert and how they resolved
+it — to its **own** ordinary Postgres table, `maintenance_actions`. An alert leaves the queue
+once it has a resolution. That's a normal pattern: replicate reference data in, own your
+transactional data.
 
 ## Why does the app's write show up in Databricks SQL? (the "round-trip")
 
@@ -33,8 +35,8 @@ database as a Unity Catalog catalog**. UC then federates *every* table in that P
 database — including tables the app creates at runtime. So:
 
 ```
-app INSERT ──▶ Postgres public.app_maintenance_tickets ──▶ (UC federation) ──▶
-    SELECT ... FROM lakebase_ws_<you>.public.app_maintenance_tickets   (Databricks SQL)
+app writes resolution ──▶ Postgres public.maintenance_actions ──▶ (UC federation) ──▶
+    SELECT ... FROM lakebase_ws_<you>.public.maintenance_actions   (Databricks SQL)
 ```
 
 No pipeline, no ETL, no copy. The analyst sees the operational write **live**. (In

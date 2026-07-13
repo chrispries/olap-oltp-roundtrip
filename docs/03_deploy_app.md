@@ -13,8 +13,8 @@ Two files in [`../app/`](../app):
   `env` passes the Lakebase coordinates. Note there's **no password** — see `db.py`.
 - **`db.py`** — `get_connection()` mints a **fresh OAuth token per connection** with
   `w.postgres.generate_database_credential(ENDPOINT_NAME)` (Autoscaling tokens are short-lived).
-  `list_machines`/`open_tickets` read the synced tables; `create_maintenance_ticket` (03.3)
-  writes your own table. `PGUSER` is left unset so the app uses its own service-principal id.
+  `open_alerts`/`claim_alert` drive the alert queue; `resolve_alert` (03.3) writes the
+  resolution. `PGUSER` is left unset so the app uses its own service-principal id.
 
 Edit `app/app.yaml`: set `PGDATABASE` to **your** `$PGDB`.
 
@@ -55,22 +55,21 @@ Open it — **Machines shows 50 rows**; the ticket form shows a "not implemented
 
 ## 03.3 · Implement the write-back (the payoff)
 
-Open `app/db.py`, find `create_maintenance_ticket()` (it raises `NotImplementedError`). Replace
-the body so it:
+Open `app/db.py`, find `resolve_alert()` (it raises `NotImplementedError`). Replace the body so
+it writes the resolution into `ACTIONS_TABLE`:
 
-1. runs one `INSERT` into `APP_TABLE` with `(machine_id, priority, description)`,
-2. uses `... RETURNING ticket_id` to get the new id back,
-3. `conn.commit()`s, and
-4. returns the `ticket_id`.
+1. `INSERT` `(ticket_id, machine_id, technician, resolution)` with `status = 'resolved'` and `resolved_at = now()`,
+2. `ON CONFLICT (ticket_id) DO UPDATE` (ticket_id is UNIQUE — resolving an already-claimed alert updates its row),
+3. `conn.commit()`.
 
 Try it from the docstring hints. Stuck / want to check? Full answer:
-[`solutions/create_maintenance_ticket.py`](solutions/create_maintenance_ticket.py) (the single
-source for the solution). Redeploy:
+[`solutions/resolve_alert.py`](solutions/resolve_alert.py) (the single source for the solution).
+Redeploy:
 
 ```bash
 databricks -p $P sync ./app $WS --full && databricks -p $P apps deploy $APP --source-code-path $WS
 ```
-**✅ Check:** in the app, create a ticket (machine 7, high, "vibration alarm") → `Created ticket #N`,
-and it appears under Open tickets.
+**✅ Check:** in the app, **claim** a flagged alert and **resolve** it with a note — it drops off
+the active queue and appears under "Recently resolved".
 
 ➡️ **Next: [step 04 — explore + round-trip](../notebooks/04_explore_and_roundtrip.py).**

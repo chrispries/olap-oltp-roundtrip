@@ -67,7 +67,7 @@ print(f"✅ set PGDATABASE={PGDB} in {yaml_path}")
 # MAGIC   No password — the app mints one.
 # MAGIC - **`app/db.py`** — `get_connection()` mints a fresh OAuth token per connection with
 # MAGIC   `w.postgres.generate_database_credential(ENDPOINT_NAME)`. `list_machines`/`open_tickets`
-# MAGIC   read the synced tables; `create_maintenance_ticket` is the gap you fill in Step 6.
+# MAGIC   `open_alerts`/`claim_alert` drive the queue; `resolve_alert` is the gap you fill in Step 6.
 
 # COMMAND ----------
 # MAGIC %md
@@ -104,7 +104,7 @@ except Exception:
 # MAGIC ## Step 4 · Grant the app's service principal access to the data
 # MAGIC Binding the resource (`CAN_CONNECT_AND_CREATE`) lets the app connect and create its own
 # MAGIC table — but **not** read the pre-existing synced tables. We grant that once:
-# MAGIC - `USAGE, CREATE ON SCHEMA public` — so the app can create its `app_maintenance_tickets` table
+# MAGIC - `USAGE, CREATE ON SCHEMA public` — so the app can create its `maintenance_actions` table
 # MAGIC - `pg_read_all_data` — SELECT on **all current *and future*** tables (survives re-syncing a
 # MAGIC   synced table, unlike a one-time `GRANT SELECT ON ALL TABLES`)
 # MAGIC
@@ -134,13 +134,15 @@ print("app URL:", w.apps.get(name=APP).url)
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## Step 6 · Implement the write-back (the payoff)
-# MAGIC Open [`../app/db.py`](../app/db.py), find `create_maintenance_ticket()` (it raises
-# MAGIC `NotImplementedError`). Make it: `INSERT` into `APP_TABLE` with
-# MAGIC `(machine_id, priority, description)` using `... RETURNING ticket_id`, `commit()`, and
-# MAGIC return the id. Full answer: [`../docs/solutions/create_maintenance_ticket.py`](../docs/solutions/create_maintenance_ticket.py).
+# MAGIC Open [`../app/db.py`](../app/db.py), find `resolve_alert()` (it raises
+# MAGIC `NotImplementedError`). Make it write the resolution into `ACTIONS_TABLE` — status
+# MAGIC `'resolved'`, the note, the technician, `resolved_at = now()` — using
+# MAGIC `INSERT ... ON CONFLICT (ticket_id) DO UPDATE` (ticket_id is UNIQUE), then `commit()`.
+# MAGIC Full answer: [`../docs/solutions/resolve_alert.py`](../docs/solutions/resolve_alert.py).
 # MAGIC
-# MAGIC Then **re-run Step 5** to redeploy. In the app, create a ticket → it appears under Open
-# MAGIC tickets. (Verify the round-trip in `04_explore_and_roundtrip`.)
+# MAGIC Then **re-run Step 5** to redeploy. In the app, **claim** an alert and **resolve** it —
+# MAGIC it drops off the queue and lands under "Recently resolved". (Verify the round-trip in
+# MAGIC `04_explore_and_roundtrip`.)
 # MAGIC
 # MAGIC **Prefer the UI?** *Compute → Apps → Create app*, add a **Database** resource
 # MAGIC (your Lakebase database, "can connect"), point it at this repo's `app/` folder, deploy.

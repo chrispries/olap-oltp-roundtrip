@@ -52,19 +52,19 @@ Actual dry-run timings: _recorded in Task 8_.
 - **Snapshot sync shows stale data** — snapshot is one-time; re-create/refresh the synced
   table if the source changed. (Continuous sync is the production answer — talking point.)
 
-## Validated live (2026-07-08, Azure FE `azure-demo`)
+## Validated live (Azure FE `azure-demo`)
 
 The full round-trip was built and verified on the `ws_christopher_pries` namespace:
 data load (50/10000/200/120) → Lakebase project `lakebase-workshop` + 4 snapshot synced
-tables → UC catalog `lakebase_ws_christopher_pries` → deployed Streamlit app
-(`lb-workshop-cpries`, read path confirmed) → wrote a ticket to
-`public.app_maintenance_tickets` → read it back from Databricks SQL. Round-trip closed.
+tables → UC catalog `lakebase_ws_christopher_pries` → deployed Streamlit app → technician
+resolves an alert (write to `public.maintenance_actions`) → read it back from Databricks SQL.
+Round-trip closed.
 
 - **Reference app (facilitator, write-back already solved):**
-  https://lb-workshop-cpries-984752964297111.11.azure.databricksapps.com
-- **Repo ships the write-back stubbed** (the attendee gap). The deployed reference app runs
-  the completed version; that divergence is intentional. Answer key:
-  `docs/solutions/create_maintenance_ticket.py`.
+  https://lb-workshop-christopher-pries-984752964297111.11.azure.databricksapps.com
+- **Repo ships the write-back stubbed** (`resolve_alert`, the attendee gap). The deployed
+  reference app runs the completed version; that divergence is intentional. Answer key:
+  `docs/solutions/resolve_alert.py`.
 
 ## Productionization talking point (approach B)
 

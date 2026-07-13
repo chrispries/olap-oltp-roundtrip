@@ -48,14 +48,14 @@ Synthetic tables (generated per-attendee into Unity Catalog):
 2. **Sync → Lakebase.** Create a Lakebase Postgres instance, then create **synced tables**
    from the Delta tables. Synced tables are read-only, low-latency serving replicas
    (choice of snapshot / triggered / continuous sync mode).
-3. **Serve → App.** The Streamlit app reads machine health, sensor summaries, and
-   open tickets from the synced tables (fast OLTP reads).
-4. **Write-back.** An operator creates/updates a maintenance ticket in the app. Because
-   synced tables are read-only, the write lands in an **app-owned Postgres table** in the
-   same Lakebase instance (e.g. `app_maintenance_tickets`).
+3. **Serve → App.** The Streamlit Maintenance Cockpit reads machine health and the open
+   alert queue from the synced tables (fast OLTP reads).
+4. **Write-back.** A technician claims an alert and resolves it with a note. Because synced
+   tables are read-only, the technician's work lands in an **app-owned Postgres table** in the
+   same Lakebase instance (`maintenance_actions`).
 5. **Back to analytics.** The Lakebase instance is **registered in Unity Catalog**, so an
-   analyst queries `app_maintenance_tickets` live from Databricks SQL / a dashboard and
-   sees the operator's new ticket in the lakehouse. Round-trip closed.
+   analyst queries `maintenance_actions` live from Databricks SQL / a dashboard (who fixed
+   what, and time-to-fix) in the lakehouse. Round-trip closed.
 
 ### Write-back mechanism decision
 

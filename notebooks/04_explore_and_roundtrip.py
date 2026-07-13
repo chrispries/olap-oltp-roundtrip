@@ -47,48 +47,51 @@ display(spark.sql(f"""
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## Step 3 · The round-trip — read what the *app* wrote
+# MAGIC ## Step 3 · The round-trip — read what the *technician* did
 # MAGIC
-# MAGIC The app can't write to the synced `maintenance_tickets` (synced tables are read-only),
-# MAGIC so it writes new tickets to its own table **`app_maintenance_tickets`**. Because UC
-# MAGIC federates the whole Postgres database, that table shows up here too.
+# MAGIC The app can't modify the synced `maintenance_tickets` (synced tables are read-only), so
+# MAGIC the technician's work — claims and resolutions — is written to the app-owned table
+# MAGIC **`maintenance_actions`**. Because UC federates the whole Postgres database, that table
+# MAGIC shows up here too.
 # MAGIC
 # MAGIC **Try it live:**
-# MAGIC 1. Run the cell below — note the row count (may be 0 if you haven't used the app yet).
-# MAGIC 2. Open your app, create a maintenance ticket.
-# MAGIC 3. Re-run the cell — your ticket appears. **That's the round-trip.** 🎉
+# MAGIC 1. Run the cell below — note the row count (may be 0 if nobody has worked an alert yet).
+# MAGIC 2. Open your app, **claim** an alert and **resolve** it with a note.
+# MAGIC 3. Re-run the cell — your resolution appears. **That's the round-trip.** 🎉
 
 # COMMAND ----------
-def show_app_tickets():
+def show_actions():
     try:
         df = spark.sql(f"""
-            SELECT ticket_id, machine_id, priority, status, description, opened_at
-            FROM {LBCAT}.public.app_maintenance_tickets
-            ORDER BY opened_at DESC
+            SELECT machine_id, technician, status, resolution, claimed_at, resolved_at
+            FROM {LBCAT}.public.maintenance_actions
+            ORDER BY COALESCE(resolved_at, claimed_at) DESC
         """)
-        print(f"app-written tickets: {df.count()}")
+        print(f"technician actions: {df.count()}")
         display(df)
     except Exception as e:
-        print("app_maintenance_tickets not found yet — start the app once (it creates the "
-              "table on first load), then re-run.\n", e)
+        print("maintenance_actions not found yet — open the app once (it creates the table on "
+              "first load) and work an alert, then re-run.\n", e)
 
-show_app_tickets()
+show_actions()
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## Step 4 · One view over both (what an analyst would build)
+# MAGIC ## Step 4 · What the data team gets back (repair-time analytics)
 # MAGIC
-# MAGIC Seeded tickets + app-written tickets, unified — the operational and analytical worlds
-# MAGIC in one query.
+# MAGIC Join the technician's resolutions to the original alerts to compute **time-to-fix** — the
+# MAGIC kind of metric (MTTR) that feeds the failure model. Operational actions, analytics-ready,
+# MAGIC with no ETL.
 
 # COMMAND ----------
 display(spark.sql(f"""
-  SELECT 'seeded' AS source, priority, count(*) AS tickets
-  FROM {LBCAT}.public.maintenance_tickets WHERE status='open' GROUP BY priority
-  UNION ALL
-  SELECT 'app'   AS source, priority, count(*) AS tickets
-  FROM {LBCAT}.public.app_maintenance_tickets WHERE status='open' GROUP BY priority
-  ORDER BY source, tickets DESC
+  SELECT a.machine_id, m.model, a.technician, a.resolution,
+         round((unix_timestamp(a.resolved_at) - unix_timestamp(t.opened_at)) / 3600.0, 1) AS hours_to_fix
+  FROM {LBCAT}.public.maintenance_actions a
+  JOIN {LBCAT}.public.machines m ON m.machine_id = a.machine_id
+  LEFT JOIN {LBCAT}.public.maintenance_tickets t ON t.ticket_id = a.ticket_id
+  WHERE a.status = 'resolved'
+  ORDER BY a.resolved_at DESC
 """))
 
 # COMMAND ----------

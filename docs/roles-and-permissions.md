@@ -51,9 +51,9 @@ resource**. It needs, in Postgres:
 | Grant | Why | Set by |
 |-------|-----|--------|
 | `CONNECT` on the database | connect at all | the resource binding (`CAN_CONNECT_AND_CREATE`) |
-| `USAGE, CREATE ON SCHEMA public` | create its `app_maintenance_tickets` table | **notebook 03, Step 4** |
+| `USAGE, CREATE ON SCHEMA public` | create its `maintenance_actions` table | **notebook 03, Step 4** |
 | `pg_read_all_data` | `SELECT` on the synced tables — **all current *and future*** tables | **notebook 03, Step 4** |
-| INSERT on `app_maintenance_tickets` | write-back | **implicit** — the app creates & owns that table |
+| INSERT on `maintenance_actions` | write-back | **implicit** — the app creates & owns that table |
 
 **Opening the app:** it sits behind workspace SSO. The creator has `CAN_MANAGE`. To let *other*
 people open it (e.g. a shared demo app, or teammates), grant them **`CAN_USE`**:
@@ -69,7 +69,7 @@ Compute → Apps → *app* → Permissions (or `databricks apps set-permissions`
   `GRANT SELECT ON ALL TABLES`:** re-creating a synced table (any re-sync) drops and recreates
   the table, and a point-in-time `GRANT SELECT` does **not** carry over — `pg_read_all_data`
   (a built-in role covering current + future tables) does.
-- **App-table ownership:** the app must create `app_maintenance_tickets` itself so it *owns* it
+- **App-table ownership:** the app must create `maintenance_actions` itself so it *owns* it
   and can `INSERT`. If a human pre-creates that table, the SP can read it (via `pg_read_all_data`)
   but **cannot write** — the write-back fails. Let the app create it.
 - **`CAN_MANAGE` ≠ the app works:** having manage rights on the app lets you *open* it; a runtime
@@ -79,5 +79,5 @@ Compute → Apps → *app* → Permissions (or `databricks apps set-permissions`
 
 Run the whole flow **as a normal (non-admin) test user**, not as yourself-the-admin — that's
 the only way to catch a missing attendee grant. Success = 01 loads data, 02's synced tables
-return rows via UC SQL, 03's app opens and shows 50 machines, a ticket you create in the app
-appears in the step-04 query.
+return rows via UC SQL, 03's app opens and shows the flagged machines, and an alert you claim
+and resolve in the app appears in the step-04 query.
