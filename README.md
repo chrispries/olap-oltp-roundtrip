@@ -16,6 +16,8 @@ straight back to the analytical layer._
 
 Full design and rationale: [`docs/design.md`](docs/design.md).
 
+![Architecture: the Apps + Lakebase round-trip](docs/architecture.svg)
+
 ## The round-trip
 
 1. **Generate → UC (Delta)** — a script populates a per-user catalog with manufacturing/IoT

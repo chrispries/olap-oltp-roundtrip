@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 692" font-family="'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C7D3D7"/>
+    </marker>
+    <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#FF6B4A"/>
+    </marker>
+    <marker id="arrowMuted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6E828A"/>
+    </marker>
+    <style>
+      .bg{fill:#0E1A1F}
+      .frame{fill:#12222A;stroke:#33484F;stroke-width:1.5}
+      .ucband{fill:#15262D;stroke:#FF4A2E;stroke-width:1.3;stroke-dasharray:6 6;opacity:.95}
+      .node{fill:#1B2E37;stroke:#33484F;stroke-width:1.4}
+      .node-star{fill:#1B2E37;stroke:#FF4A2E;stroke-width:2}
+      .h1{fill:#EAF1F3;font-size:27px;font-weight:700}
+      .sub{fill:#93A6AE;font-size:15px}
+      .plat{fill:#EAF1F3;font-size:16px;font-weight:700}
+      .uc{fill:#FF6B4A;font-size:14px;font-weight:600;letter-spacing:.3px}
+      .title{fill:#EAF1F3;font-size:16px;font-weight:700}
+      .desc{fill:#93A6AE;font-size:12px}
+      .flow{stroke:#C7D3D7;stroke-width:2;fill:none}
+      .flow-accent{stroke:#FF6B4A;stroke-width:2;fill:none}
+      .interact{stroke:#6E828A;stroke-width:1.6;fill:none;stroke-dasharray:5 5}
+      .flab{fill:#C7D3D7;font-size:12.5px;font-weight:600}
+      .flab-a{fill:#FF8A6E;font-size:12.5px;font-weight:600}
+      .ilab{fill:#93A6AE;font-size:12.5px;font-style:italic}
+      .badge{fill:#FF4A2E}
+      .bnum{fill:#fff;font-size:13px;font-weight:700}
+      .chip{fill:#22323B;stroke:#3A4E56;stroke-width:1}
+      .chiptx{fill:#C7D3D7;font-size:11.5px}
+      .icon{stroke:#FF6B4A;stroke-width:2;fill:none}
+      .icon-f{fill:#FF6B4A}
+      .people{stroke:#93A6AE;stroke-width:2;fill:none}
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1280" height="692"/>
+
+  <text class="h1" x="44" y="52">Databricks Apps + Lakebase</text>
+  <text class="sub" x="45" y="80">The round-trip — one governed platform, no ETL between analytics and the app</text>
+
+  <path class="interact" d="M148,318 L178,318 L178,104 L1074,104 L1074,300" marker-end="url(#arrowMuted)"/>
+  <text class="ilab" x="626" y="96" text-anchor="middle">End users interact with the app</text>
+
+  <g class="people" transform="translate(58,262)">
+    <circle cx="42" cy="14" r="11"/><path d="M22,58 a20,22 0 0 1 40,0"/>
+    <circle cx="14" cy="26" r="9"/><path d="M0,60 a15,17 0 0 1 30,-4"/>
+    <circle cx="70" cy="26" r="9"/><path d="M54,56 a15,17 0 0 1 30,4"/>
+  </g>
+  <text x="100" y="360" text-anchor="middle" fill="#C7D3D7" font-size="14" font-weight="600">End Users</text>
+
+  <rect class="frame" x="200" y="120" width="1040" height="548" rx="18"/>
+  <g transform="translate(230,142)">
+    <rect class="icon-f" x="0" y="2" width="20" height="4" rx="1"/>
+    <rect class="icon-f" x="0" y="9" width="20" height="4" rx="1" opacity=".7"/>
+    <rect class="icon-f" x="0" y="16" width="20" height="4" rx="1" opacity=".45"/>
+  </g>
+  <text class="plat" x="260" y="158">Databricks Platform</text>
+
+  <rect class="ucband" x="250" y="208" width="548" height="330" rx="14"/>
+  <circle cx="272" cy="236" r="8" fill="none" stroke="#FF6B4A" stroke-width="2"/>
+  <circle cx="272" cy="236" r="2.5" class="icon-f"/>
+  <text class="uc" x="290" y="241">Unity Catalog · governance &amp; lineage</text>
+
+  <rect class="node" x="286" y="300" width="188" height="180" rx="12"/>
+  <g transform="translate(360,326)">
+    <path class="icon" d="M0,10 l20,-9 l20,9 l-20,9 z"/>
+    <path class="icon" d="M0,20 l20,9 l20,-9" opacity=".7"/>
+  </g>
+  <text class="title" x="380" y="418" text-anchor="middle">Lakehouse</text>
+  <text class="desc" x="380" y="440" text-anchor="middle">Delta tables · analytical (OLAP)</text>
+
+  <rect class="node-star" x="576" y="284" width="188" height="232" rx="12"/>
+  <g transform="translate(646,306)">
+    <ellipse class="icon" cx="24" cy="8" rx="24" ry="8"/>
+    <path class="icon" d="M0,8 v20 a24,8 0 0 0 48,0 v-20"/>
+    <path class="icon" d="M0,8 v10 a24,8 0 0 0 48,0 v-10" opacity=".6"/>
+  </g>
+  <text class="title" x="670" y="392" text-anchor="middle">Lakebase</text>
+  <text class="desc" x="670" y="413" text-anchor="middle">Postgres · operational (OLTP)</text>
+  <rect class="chip" x="592" y="430" width="156" height="26" rx="6"/>
+  <text class="chiptx" x="670" y="447" text-anchor="middle">synced tables · read-only</text>
+  <rect class="chip" x="592" y="464" width="156" height="26" rx="6"/>
+  <text class="chiptx" x="670" y="481" text-anchor="middle">app table · writes</text>
+
+  <rect class="node" x="980" y="300" width="188" height="188" rx="12"/>
+  <g transform="translate(1042,328)">
+    <rect class="icon" x="0" y="0" width="60" height="44" rx="5"/>
+    <path class="icon" d="M0,13 h60"/>
+    <circle class="icon-f" cx="9" cy="6.5" r="2"/><circle class="icon-f" cx="17" cy="6.5" r="2"/>
+  </g>
+  <text class="title" x="1074" y="410" text-anchor="middle">Databricks App</text>
+  <text class="desc" x="1074" y="432" text-anchor="middle">Streamlit frontend</text>
+
+  <path class="flow" d="M474,338 L576,338" marker-end="url(#arrow)"/>
+  <circle class="badge" cx="500" cy="318" r="12"/><text class="bnum" x="500" y="322" text-anchor="middle">1</text>
+  <text class="flab" x="556" y="322" text-anchor="middle">sync (snapshot)</text>
+
+  <path class="flow" d="M764,346 L980,346" marker-end="url(#arrow)"/>
+  <circle class="badge" cx="792" cy="326" r="12"/><text class="bnum" x="792" y="330" text-anchor="middle">2</text>
+  <text class="flab" x="882" y="330" text-anchor="middle">low-latency reads</text>
+
+  <path class="flow-accent" d="M980,410 L764,410" marker-end="url(#arrowAccent)"/>
+  <circle class="badge" cx="952" cy="410" r="12"/><text class="bnum" x="952" y="414" text-anchor="middle">3</text>
+  <text class="flab-a" x="866" y="434" text-anchor="middle">write-back</text>
+
+  <path class="flow" d="M670,516 L670,614 L380,614 L380,480" marker-end="url(#arrow)"/>
+  <circle class="badge" cx="524" cy="614" r="12"/><text class="bnum" x="524" y="618" text-anchor="middle">4</text>
+  <text class="flab" x="546" y="640" text-anchor="middle">queryable in Databricks SQL — UC federation, no copy</text>
+</svg>
