@@ -101,9 +101,14 @@ except Exception:
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## Step 4 · Grant the app's service principal SELECT on the synced tables
-# MAGIC `CAN_CONNECT_AND_CREATE` lets the app connect + create its own table, but not read the
-# MAGIC pre-existing synced tables — grant that once.
+# MAGIC ## Step 4 · Grant the app's service principal access to the data
+# MAGIC Binding the resource (`CAN_CONNECT_AND_CREATE`) lets the app connect and create its own
+# MAGIC table — but **not** read the pre-existing synced tables. We grant that once:
+# MAGIC - `USAGE, CREATE ON SCHEMA public` — so the app can create its `app_maintenance_tickets` table
+# MAGIC - `pg_read_all_data` — SELECT on **all current *and future*** tables (survives re-syncing a
+# MAGIC   synced table, unlike a one-time `GRANT SELECT ON ALL TABLES`)
+# MAGIC
+# MAGIC The app writes only to the table it creates and owns, so it needs no extra write grants.
 
 # COMMAND ----------
 import psycopg
@@ -114,8 +119,8 @@ with psycopg.connect(host=host, port=5432, dbname=PGDB, user=user,
                      password=w.postgres.generate_database_credential(ENDPOINT).token,
                      sslmode="require", autocommit=True) as c:
     c.execute(f'GRANT USAGE, CREATE ON SCHEMA public TO "{sp}"')
-    c.execute(f'GRANT SELECT ON ALL TABLES IN SCHEMA public TO "{sp}"')
-print("✅ granted USAGE/CREATE + SELECT to the app service principal")
+    c.execute(f'GRANT pg_read_all_data TO "{sp}"')
+print("✅ app service principal can read all tables (now + future) and create its own")
 
 # COMMAND ----------
 # MAGIC %md

@@ -37,14 +37,11 @@ Actual dry-run timings: _recorded in Task 8_.
 
 ## Common failure modes
 
-- **App can read its own table but not the synced tables** — binding the Lakebase database
-  resource as `CAN_CONNECT_AND_CREATE` does **not** auto-grant SELECT on the *pre-existing*
-  synced tables to the app's service-principal Postgres role. Grant it explicitly (once):
-  ```sql
-  GRANT USAGE ON SCHEMA public TO "<sp-client-id>";
-  GRANT SELECT ON ALL TABLES IN SCHEMA public TO "<sp-client-id>";
-  ```
-  (Run as the DB owner via psql. The `<sp-client-id>` is the app SP's client id = `PGUSER`.)
+- **`insufficientPrivilege` when opening the app** — the app SP lacks `SELECT` on a synced
+  table (Postgres denies the read → psycopg raises `InsufficientPrivilege`). Notebook 03 grants
+  `pg_read_all_data` to the SP, which covers all current **and future** tables (survives a
+  re-sync, unlike a one-time `GRANT SELECT`). Full breakdown of every role/right:
+  [`roles-and-permissions.md`](roles-and-permissions.md).
 - **Data generation** — lives only in `notebooks/01_generate_data` (self-contained, no repo
   import needed). It is the single source for the synthetic data.
 - **App auth (Autoscaling)** — do NOT use a static `PGPASSWORD`. `app/db.py` mints a fresh
