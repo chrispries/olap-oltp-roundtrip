@@ -143,10 +143,14 @@ print(f"\n✅ All four tables loaded into {CATALOG}.{schema}")
 **✅ Check:** you see `OK` for each table and `✅ All four tables loaded …` (50 / 10000 / 200 / 120).
 
 **💡 What just happened?**
-- You derived `ws_<your-username>` so your data is isolated from everyone else's.
-- It uses a fixed seed, so every participant gets the same results.
-- Each frame became a **managed Delta table** in Unity Catalog, and four machines
-  (**#7, #19, #31, #44**) now carry open, high-priority alerts.
+- **Technically:** you created a schema in Unity Catalog for your data to live in, then loaded
+  the plant's data into it as governed **Delta tables** — the machines themselves, the sensor
+  telemetry they stream, and their production orders — plus a set of maintenance tickets that
+  includes current failures on four machines.
+- **In the scenario:** this is the analytical picture the business already has. You now know
+  your fleet of machines, what their sensors are reporting, and which machines have open issues
+  right now. That's the foundation the rest of the round-trip builds on — serving this data to
+  the people on the floor and feeding their actions back.
 
 > **Note:** All labs use the catalog `catalog_workshop` and your per-user schema
 > `ws_<username>` (lowercase, non-alphanumeric → `_`). Example:
