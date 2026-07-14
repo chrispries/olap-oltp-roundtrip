@@ -4,8 +4,10 @@
 By the end of this lab, you will:
 - Understand **Lakebase** — managed PostgreSQL (OLTP) sitting next to the lakehouse
 - Create your own Postgres **database** on the shared Lakebase project
-- **Register** it in Unity Catalog and create read-only **snapshot synced tables** from your Delta data
-- Understand why registering it in UC is what makes the round-trip possible (federation, no copy)
+- Set up the link **both ways** between Unity Catalog and Lakebase:
+  - **UC → Lakebase:** sync your Delta tables *into* Postgres as read-only snapshot synced tables
+  - **Lakebase → UC:** register the database as a **second UC catalog** so everything in Postgres
+    (including what the app writes later) is queryable from Databricks SQL
 
 ## Introduction
 
@@ -13,10 +15,12 @@ Your analytical tables are great for scans and joins, but not for the millisecon
 reads and writes an app needs. **Lakebase** gives you a real Postgres database, serverless and
 scale-to-zero, right next to your lakehouse.
 
-| Piece | What it is |
-|-------|------------|
-| **Synced table** | A **read-only** replica of a Delta table, mirrored into Lakebase Postgres |
-| **UC-registered catalog** | Registering the Lakebase database in Unity Catalog federates *every* table in it — so it's queryable from Databricks SQL with no copy |
+You'll connect it to Unity Catalog in **both directions**, using two catalogs:
+
+| Direction | Mechanism | What it does |
+|-----------|-----------|--------------|
+| **UC → Lakebase** | **Synced table** | A read-only copy of a Delta table, synced from your source catalog `catalog_workshop` *into* Lakebase Postgres |
+| **Lakebase → UC** | **A second catalog** (`lakebase_schema_<you>`) | Registering your Postgres database in Unity Catalog creates a *new* UC catalog that mirrors it — so everything in Postgres is queryable from Databricks SQL, **live and read-only** (federation, no copy back into Delta) |
 
 > Read [`docs/concepts.md`](../docs/concepts.md) if you want the full mental model first.
 
@@ -40,8 +44,15 @@ dbutils.library.restartPython()
 ```
 
 > ⚠️ `restartPython()` wipes all variables and imports (including anything from a previous lab).
-> That's expected — the next cell re-imports and re-derives everything, so **always run Step 1
-> right after the restart.**
+> That's expected — the next cells re-import and re-derive everything, so **run them after the
+> restart.**
+
+Confirm the upgrade took — this should print **0.50.0** or higher:
+
+```python
+import importlib.metadata as md
+print(f"databricks-sdk version: {md.version('databricks-sdk')}")
+```
 
 ### Step 1 — Set up (run this right after the restart)
 
@@ -87,10 +98,15 @@ with psycopg.connect(host=host, port=5432, dbname="postgres", user=user,
         c.execute(f'CREATE DATABASE "{PGDB}"'); print(f"✅ created database {PGDB}")
 ```
 
-### Step 3 — Register your database as a Unity Catalog catalog
+### Step 3 — Register the database in Unity Catalog (Lakebase → UC · the second catalog)
 
-This is what makes the round-trip work: UC federates your **whole** Postgres database, so
-anything in it (including tables the app creates later) is queryable from SQL.
+This is the **Lakebase → Unity Catalog** direction. It creates a **second UC catalog**,
+`lakebase_schema_<username>`, that mirrors your Postgres database into Unity Catalog — so
+everything in Postgres, **including rows the app writes later**, is queryable from Databricks
+SQL **live and read-only** (federation, not a copy back into Delta).
+
+> Why now, before the sync? The synced tables in Step 4 live *inside* this catalog
+> (`lakebase_schema_<username>.public.<table>`), so the catalog has to exist first.
 
 ```python
 from databricks.sdk.service.postgres import Catalog
@@ -104,10 +120,12 @@ except Exception as e:
     print(f"create_catalog: {type(e).__name__} (likely already exists) — {str(e)[:160]}")
 ```
 
-### Step 4 — Create the snapshot synced tables
+### Step 4 — Sync your Delta data into Lakebase (UC → Lakebase)
 
-One **SNAPSHOT** synced table per Delta table. Each spins up a short pipeline (~2–4 min). The
-synced-table id is `<catalog>.public.<table>` — `public` is the Postgres schema.
+Now the other direction: copy your four Delta tables from `catalog_workshop` **into** your
+Postgres database as read-only **SNAPSHOT synced tables**. They land in Postgres's `public`
+schema and show up under the second catalog as `lakebase_schema_<username>.public.<table>`.
+Each spins up a short pipeline (~2–4 min).
 
 ```python
 from databricks.sdk.service.postgres import SyncedTable
@@ -148,10 +166,14 @@ for tbl in PKS:
 **through Unity Catalog** — proof the federation works before you've even built the app.
 
 **💡 What just happened?**
-- **Snapshot** = a one-time copy of your Delta table into Postgres (continuous sync exists too).
-- Registering the database as UC catalog `lakebase_schema_<user>` federates the *whole* Postgres
-  database — including tables your app will create later. That's the "back to analytics" leg,
-  for free.
+- **Two catalogs, two directions.** `catalog_workshop` is your analytical source; you synced its
+  Delta tables **into** Lakebase (UC → Lakebase, a read-only snapshot copy), and you registered a
+  **second catalog** `lakebase_schema_<you>` that mirrors the whole Postgres database **back into**
+  Unity Catalog (Lakebase → UC, live read-only federation — not a copy into Delta).
+- **Net:** the same data is now reachable both as fast Postgres (for the app, Lab 3) and via
+  Databricks SQL (for analytics) — and anything the app writes to Postgres later shows up in
+  `lakebase_schema_<you>` automatically, no extra sync.
+- **Snapshot** = a one-time copy; continuous sync exists too if you need live updates from Delta.
 
 > **Prefer the UI?** *Compute ▸ Database instances ▸ `lakebase-workshop`* to create a database,
 > then *Catalog Explorer ▸ Create ▸ Synced table* (Snapshot) per Delta table, and register the
