@@ -11,7 +11,7 @@
 ## Pre-provisioning checklist (facilitator, day before)
 
 - [ ] Create Lakebase instance `lakebase-workshop`, record host/catalog in `sync/*.md`.
-- [ ] **Run `setup/admin_setup.py` (workspace admin)** — creates the participant group and grants
+- [ ] **Run `bundle/src/notebooks/admin_setup.py` (workspace admin)** — creates the participant group and grants
       workspace/SQL entitlements, UC `USE CATALOG`+`CREATE SCHEMA`, `CREATE CATALOG` on metastore,
       and warehouse `CAN_USE`. See [`roles-and-permissions.md`](roles-and-permissions.md).
 - [ ] Grant the participant group access to the Lakebase project + confirm Apps creation is
@@ -45,11 +45,11 @@ Actual dry-run timings: _recorded in Task 8_.
   `pg_read_all_data` to the SP, which covers all current **and future** tables (survives a
   re-sync, unlike a one-time `GRANT SELECT`). Full breakdown of every role/right:
   [`roles-and-permissions.md`](roles-and-permissions.md).
-- **Data generation** — lives only in `notebooks/01_generate_data` (self-contained, no repo
+- **Data generation** — lives only in `bundle/src/notebooks/generate_data` (self-contained, no repo
   import needed). It is the single source for the synthetic data.
-- **App auth (Autoscaling)** — do NOT use a static `PGPASSWORD`. `app/db.py` mints a fresh
+- **App auth (Autoscaling)** — do NOT use a static `PGPASSWORD`. `bundle/src/app/db.py` mints a fresh
   OAuth token per connection via `w.postgres.generate_database_credential(ENDPOINT_NAME)`.
-  `ENDPOINT_NAME`, `PGHOST`, `PGDATABASE`, `PGUSER` (= SP client id) are set in `app/app.yaml`.
+  `ENDPOINT_NAME`, `PGHOST`, `PGDATABASE`, `PGUSER` (= SP client id) are set in `bundle/src/app/app.yaml`.
 - **Local `pip install` fails** — expected; this repo is built/tested **on Databricks**, not
   locally (public PyPI is firewalled). Use the notebooks, not a local venv.
 - **Snapshot sync shows stale data** — snapshot is one-time; re-create/refresh the synced
@@ -67,7 +67,7 @@ Round-trip closed.
   https://lb-workshop-christopher-pries-984752964297111.11.azure.databricksapps.com
 - **Repo ships the write-back stubbed** (`resolve_alert`, the attendee gap). The deployed
   reference app runs the completed version; that divergence is intentional. Answer key:
-  `docs/solutions/resolve_alert.py`.
+  `labs/artifacts/solutions/resolve_alert.py`.
 
 ## Productionization talking point (approach B)
 

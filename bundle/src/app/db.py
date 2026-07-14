@@ -102,7 +102,7 @@ def resolve_alert(conn: psycopg.Connection, ticket_id: int, machine_id: int,
     Close out an alert: write (or update) its row in ACTIONS_TABLE with status 'resolved',
     the `resolution` note, the `technician`, and resolved_at = now(). Because ticket_id is
     UNIQUE, use `INSERT ... ON CONFLICT (ticket_id) DO UPDATE`. Remember to commit.
-    The completed version is in docs/solutions/resolve_alert.py.
+    The completed version is in labs/artifacts/solutions/resolve_alert.py.
     """
     raise NotImplementedError("TODO (workshop): implement resolve_alert")
 

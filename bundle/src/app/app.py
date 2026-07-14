@@ -59,7 +59,7 @@ for a in alerts:
                         st.rerun()
                     except NotImplementedError:
                         st.warning("Write-back not implemented yet — complete resolve_alert() "
-                                   "in app/db.py (workshop step).")
+                                   "in db.py (workshop step).")
 
 # --- Round-trip: resolved work, back in the lakehouse ------------------------
 st.divider()

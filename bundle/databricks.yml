@@ -1,0 +1,32 @@
+# Databricks Asset Bundle for "App + Lakebase in a Day".
+#
+# Deploys the workshop's runnable assets (the notebooks + a setup job) so a facilitator can
+# stand up the whole stack for a demo user with one command:
+#
+#   databricks bundle deploy -t dev -p <profile>
+#   databricks bundle run app_lakebase_setup -t dev -p <profile>
+#
+# Attendees don't need this — they clone the repo as a Git folder and run the labs. The bundle
+# is the facilitator / "productionized" path.
+bundle:
+  name: app-lakebase-in-a-day
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog that holds the analytical Delta tables.
+    default: lakebase_workshop
+  lakebase_project:
+    description: The shared Lakebase (Postgres, autoscaling) project.
+    default: lakebase-workshop
+  warehouse_id:
+    description: SQL warehouse for verification queries.
+    lookup:
+      warehouse: "Shared Endpoint"
+
+targets:
+  dev:
+    mode: development
+    default: true

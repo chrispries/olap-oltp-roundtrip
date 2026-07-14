@@ -1,23 +1,10 @@
 # App + Lakebase in a Day
 
-A hands-on workshop that proves the Databricks **Apps + Lakebase round-trip**: analytical
-data that already lives in Unity Catalog is synced into an operational Lakebase (Postgres)
-database, served through a Databricks App, edited by users in that app, and those edits
-reappear in the analytical layer — all on one governed platform.
+A hands-on workshop covering the Databricks **Apps + Lakebase round-trip** — from analytical
+data in Unity Catalog, to an operational Postgres database and a live app, and back to
+analytics. Use it for instructor-led training or self-paced learning.
 
-**Takeaway:** _If I have analytical data in Unity Catalog, it is easy to get it into
-Lakebase, easy to build and serve an app on top, and whatever happens in the app comes
-straight back to the analytical layer._
-
-- **Format:** 90-minute hands-on build-along
-- **Audience:** data/software engineers (medium group, 9–20)
-- **App stack:** Streamlit (Python) — FastAPI + React is a possible advanced variant
-- **Scenario:** shop-floor predictive maintenance (manufacturing / IoT)
-
-Presenting it? Open with the scenario: [`docs/scenario.md`](docs/scenario.md) ("Keep the line
-running"). Full design and rationale: [`docs/design.md`](docs/design.md).
-
-![Architecture: the Apps + Lakebase round-trip](docs/architecture.svg)
+<img src="./docs/architecture.svg" width="100%">
 
 ## Scenario — "Keep the line running"
 
@@ -29,100 +16,52 @@ manufacturing background needed.)*
 > Apps** serve that data operationally, let those people act on it, and play their actions
 > straight back into analytics.
 
-Picture a factory with **50 machines** — laser cutters, press brakes, punch presses, milling
-machines (all "CNC": *Computer Numerical Control*, i.e. computer-controlled tools). Each one
-streams how it's doing — temperature, vibration, load — into the lakehouse, next to its
-production orders and repair history. The data team already mines it for productivity
-reporting (**OEE** — *Overall Equipment Effectiveness*, the standard factory scorecard) and a
-model that predicts breakdowns from rising vibration.
+A factory runs **50 machines** streaming telemetry (temperature, vibration, load) into the
+lakehouse. The data team mines it for reporting and a breakdown-prediction model — but that
+intelligence is trapped in dashboards. When a machine spikes at 2 a.m., the night-shift
+technician needs a dead-simple app: *"which machines need attention, and let me log what I
+did."* That's an operational job the lakehouse isn't built for — so you sync the data into
+**Lakebase**, serve it through a **Databricks App** (a Maintenance Cockpit), let the technician
+resolve alerts, and — because Lakebase is governed by Unity Catalog — their work flows straight
+back to analytics. Full write-up: [`docs/scenario.md`](docs/scenario.md).
 
-**But that intelligence is trapped in dashboards.** At 2 a.m. machine #7's vibration climbs
-past its safe limit. The night-shift technician isn't going to open a BI dashboard — they need
-a dead-simple tablet app: *"which of my machines need attention right now, and let me log what
-I did about it."* That's an **operational** job (instant lookups and writes) the analytical
-lakehouse isn't built for — and a separate database would mean a second system to govern.
-That's the gap Lakebase + Apps close:
+## Before the workshop (workspace admin, once)
 
-1. The data's already in **Unity Catalog** → **sync** it into Lakebase for millisecond serving.
-2. A **Databricks App** — the Maintenance Cockpit — shows each technician their machines + open alerts.
-3. The technician logs a fix (*"replaced coolant filter on machine #7"*) — a **write-back**.
-4. Governed by UC, that action is **instantly queryable in SQL** — measure repair time, retrain the model.
+Run [`bundle/src/notebooks/admin_setup.py`](bundle/src/notebooks/admin_setup.py) — it creates a
+`lakebase-workshop-participants` group and grants it everything participants need (workspace +
+SQL entitlements, Unity Catalog grants, warehouse `CAN_USE`). Full privilege reference:
+[`docs/roles-and-permissions.md`](docs/roles-and-permissions.md).
 
-> **One governed platform serves both the analyst and the person on the floor — and their
-> actions make the analytics smarter.** From an early-warning signal to a fix on the floor, and
-> back to the model that predicted it.
+## Get started
 
-The seed plants four machines that clearly need attention (**#7** bearing wear, **#19** coolant
-low, **#31** calibration drift, **#44** spindle overheating), so the app opens like a real
-cockpit. Full write-up: [`docs/scenario.md`](docs/scenario.md).
+1. In Databricks: **Workspace ▸ Create ▸ Git folder**, paste this repo's URL, **Create**.
+2. Open **[`labs/Lab 0 - Setup.md`](labs/Lab%200%20-%20Setup.md)** and follow the labs in order.
+   Read [`docs/concepts.md`](docs/concepts.md) first if the ideas are new (10 min).
 
-## The round-trip
+## The labs
 
-1. **Generate → UC (Delta)** — a script populates a per-user catalog with manufacturing/IoT
-   tables (`machines`, `sensor_readings`, `production_orders`, `maintenance_tickets`).
-2. **Sync → Lakebase** — create a Lakebase Postgres instance and synced tables from the
-   Delta tables (read-only serving replicas).
-3. **Serve → App** — a Streamlit app reads machine health and open tickets from the synced
-   tables.
-4. **Write-back** — the app writes new/updated maintenance tickets to an app-owned Postgres
-   table in Lakebase.
-5. **Back to analytics** — because Lakebase is registered in Unity Catalog, the app's writes
-   are queryable live from Databricks SQL. Round-trip closed.
+Each lab is a markdown guide with the code inline, "what just happened" explainers, and ✅
+checks. The runnable notebooks/app live in [`bundle/src/`](bundle/src).
 
-## 90-minute agenda
-
-| Time | Segment | Mode |
-|------|---------|------|
-| 0:00–0:10 | Intro + architecture story | Presentation |
-| 0:10–0:20 | Clone repo, run data-gen → UC catalog populated | Hands-on |
-| 0:20–0:35 | Create Lakebase instance + synced tables | Hands-on |
-| 0:35–0:50 | Deploy the provided app, explore it | Hands-on |
-| 0:50–1:10 | Guided code change: complete write-back, redeploy | Hands-on |
-| 1:10–1:25 | Run analytical query / dashboard, see write-back land | Hands-on |
-| 1:25–1:30 | Productionization + wrap-up | Presentation |
+| Lab | Topic | Guide |
+|-----|-------|-------|
+| **Lab 0** | Setup — get the repo into your workspace, provision access, choose a start | [guide](labs/Lab%200%20-%20Setup.md) |
+| **Lab 1** | Generate the analytical data in Unity Catalog | [guide](labs/Lab%201%20-%20Generate%20Analytical%20Data.md) |
+| **Lab 2** | Sync it into Lakebase (Postgres) as read-only serving tables | [guide](labs/Lab%202%20-%20Sync%20to%20Lakebase.md) |
+| **Lab 3** | Build & deploy the Maintenance Cockpit app; implement the write-back | [guide](labs/Lab%203%20-%20Build%20and%20Deploy%20the%20App.md) |
+| **Lab 4** | Close the round-trip — the app's writes, live in Databricks SQL | [guide](labs/Lab%204%20-%20Close%20the%20Round-Trip.md) |
 
 ## Repository layout
 
 | Path | Purpose |
 |------|---------|
-| `notebooks/` | All five steps **00–04** as runnable Databricks notebooks (the primary path) |
-| `sync/` | Step **02** laptop-CLI alternative: `02_create_lakebase.md` |
-| `app/` | Step **03** code: Streamlit app (`app.py`, `db.py`, `app.yaml`); write-back left as a guided gap |
-| `docs/` | `concepts.md`, `attendee-runbook.md` (the 00→04 map), `03_deploy_app.md` (CLI alt), `facilitator-notes.md`, `design.md`, `solutions/` |
-| `analytics/` | Round-trip SQL query + dashboard runbook |
+| `labs/` | The workshop guides (Lab 0–4) + `artifacts/` (answer key, round-trip query) |
+| `bundle/` | Databricks Asset Bundle — deploy the stack in one command ([README](bundle/README.md)); `src/notebooks/` + `src/app/` hold the runnable code |
+| `docs/` | `scenario.md`, `concepts.md`, `architecture.svg`, `roles-and-permissions.md`, `facilitator-notes.md`, `design.md`, `dashboard.md` |
 
-## The flow — follow the numbers (00 → 04)
+## What you'll build
 
-Read [`docs/concepts.md`](docs/concepts.md) first (10 min), then work the steps in order.
-Each step is a numbered asset with ✅ checks; the map lives in
-[`docs/attendee-runbook.md`](docs/attendee-runbook.md).
+`UC Delta ─①sync→ Lakebase synced tables ─②reads→ Streamlit app ─③write-back→ maintenance_actions ─④UC federation→ Databricks SQL`
 
-**Before the workshop (workspace admin, once):** run [`setup/admin_setup.py`](setup/admin_setup.py)
-— it creates a `lakebase-workshop-participants` group and grants it everything participants
-need (workspace + SQL entitlements, `USE CATALOG`/`CREATE SCHEMA` on `lakebase_workshop`,
-`CREATE CATALOG` on the metastore, `CAN_USE` on a warehouse). Full privilege reference:
-[`docs/roles-and-permissions.md`](docs/roles-and-permissions.md).
-
-Then, every step below is a **runnable notebook** — participants just "Run cell" in their own
-workspace, no laptop setup. Each infra step also lists a UI path and a laptop-CLI alternative.
-
-| # | Step | Run in a notebook | Also available as |
-|---|------|-------------------|-------------------|
-| **00** | Start here / orientation | [`notebooks/00_start_here`](notebooks/00_start_here.py) | — |
-| **01** | Generate analytical data → Unity Catalog | [`notebooks/01_generate_data`](notebooks/01_generate_data.py) | — |
-| **02** | Create Lakebase DB + UC catalog + synced tables | [`notebooks/02_create_lakebase`](notebooks/02_create_lakebase.py) | UI (in-notebook) · CLI: [`sync/02_create_lakebase.md`](sync/02_create_lakebase.md) |
-| **03** | Deploy the Streamlit app + write-back | [`notebooks/03_deploy_app`](notebooks/03_deploy_app.py) + [`app/`](app/) | UI (in-notebook) · CLI: [`docs/03_deploy_app.md`](docs/03_deploy_app.md) |
-| **04** | Explore Lakebase + close the round-trip | [`notebooks/04_explore_and_roundtrip`](notebooks/04_explore_and_roundtrip.py) | — |
-
-The infra notebooks (02, 03) use the Databricks SDK, so they run entirely in-workspace; each
-ends with the equivalent UI clicks and points to the laptop-CLI runbook if you prefer that.
-
-For running it as a group: [`docs/facilitator-notes.md`](docs/facilitator-notes.md).
-
-## Status
-
-Built and **validated end-to-end live on Azure FE** (2026-07-08): data load → Lakebase
-project + snapshot synced tables → UC catalog → deployed Streamlit app → round-trip write-back
-confirmed in Databricks SQL. The repo ships the write-back **stubbed** (the attendee gap);
-answer key in [`docs/solutions/`](docs/solutions/). All Python runs on Databricks (public PyPI
-is firewalled locally — see the plan's Revision note).
+One governed platform serves both the analyst and the person on the floor — and their actions
+make the analytics smarter. No second database to secure, no ETL between the two worlds.

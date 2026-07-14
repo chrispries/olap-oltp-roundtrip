@@ -146,6 +146,6 @@ for tbl in PKS:
 # MAGIC instance page. Same result, click-driven.
 # MAGIC
 # MAGIC **Laptop CLI:** the exact `databricks postgres …` commands are in
-# MAGIC `sync/02_create_lakebase.md`.
+# MAGIC Lab 2 (Sync to Lakebase).
 # MAGIC
 # MAGIC ➡️ **Next: `03_deploy_app`.**

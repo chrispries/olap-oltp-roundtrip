@@ -27,7 +27,7 @@ os.environ["PGDATABASE"] = f"ws_{slug}"
 os.environ["PGUSER"] = user
 
 import sys
-sys.path.append("..")  # so `from app import db` resolves in a Git folder
+sys.path.append("../bundle/src")  # so `from app import db` resolves in the Git folder
 from app import db
 
 # COMMAND ----------

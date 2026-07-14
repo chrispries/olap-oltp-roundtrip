@@ -10,7 +10,7 @@
 # MAGIC (01) UC ──▶ (02) Lakebase ──▶ 👉 (03) app ──▶ (04) round-trip
 # MAGIC ```
 # MAGIC
-# MAGIC No hand-editing needed — Step 1.5 writes your database name into `app/app.yaml` for you.
+# MAGIC No hand-editing needed — Step 1.5 writes your database name into `bundle/src/app/app.yaml` for you.
 
 # COMMAND ----------
 # MAGIC %pip install -U "databricks-sdk>=0.50" "psycopg[binary]>=3.1" -q
@@ -48,7 +48,7 @@ print(f"user={user}\nPGDB={PGDB}\nAPP={APP}\nAPP_SRC={APP_SRC}")
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## Step 1.5 · Point the app at *your* database
-# MAGIC Writes `PGDATABASE=<your ws_ db>` into `app/app.yaml` so you never hand-edit it (and can't
+# MAGIC Writes `PGDATABASE=<your ws_ db>` into `bundle/src/app/app.yaml` so you never hand-edit it (and can't
 # MAGIC accidentally point at someone else's database). Safe to re-run.
 
 # COMMAND ----------
@@ -63,9 +63,9 @@ print(f"✅ set PGDATABASE={PGDB} in {yaml_path}")
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## Step 2 · Read the app (this is what you're here to learn)
-# MAGIC - **`app/app.yaml`** — the app config: runs Streamlit on port 8000; passes Lakebase env.
+# MAGIC - **`bundle/src/app/app.yaml`** — the app config: runs Streamlit on port 8000; passes Lakebase env.
 # MAGIC   No password — the app mints one.
-# MAGIC - **`app/db.py`** — `get_connection()` mints a fresh OAuth token per connection with
+# MAGIC - **`bundle/src/app/db.py`** — `get_connection()` mints a fresh OAuth token per connection with
 # MAGIC   `w.postgres.generate_database_credential(ENDPOINT_NAME)`. `list_machines`/`open_tickets`
 # MAGIC   `open_alerts`/`claim_alert` drive the queue; `resolve_alert` is the gap you fill in Step 6.
 
@@ -134,11 +134,11 @@ print("app URL:", w.apps.get(name=APP).url)
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## Step 6 · Implement the write-back (the payoff)
-# MAGIC Open [`../app/db.py`](../app/db.py), find `resolve_alert()` (it raises
+# MAGIC Open `bundle/src/app/db.py`, find `resolve_alert()` (it raises
 # MAGIC `NotImplementedError`). Make it write the resolution into `ACTIONS_TABLE` — status
 # MAGIC `'resolved'`, the note, the technician, `resolved_at = now()` — using
 # MAGIC `INSERT ... ON CONFLICT (ticket_id) DO UPDATE` (ticket_id is UNIQUE), then `commit()`.
-# MAGIC Full answer: [`../docs/solutions/resolve_alert.py`](../docs/solutions/resolve_alert.py).
+# MAGIC Full answer: [`../labs/artifacts/solutions/resolve_alert.py`](../labs/artifacts/solutions/resolve_alert.py).
 # MAGIC
 # MAGIC Then **re-run Step 5** to redeploy. In the app, **claim** an alert and **resolve** it —
 # MAGIC it drops off the queue and lands under "Recently resolved". (Verify the round-trip in

@@ -49,11 +49,11 @@ Lakebase **Autoscaling** issues **short-lived (~1h) OAuth tokens**, not a fixed 
 
 1. You bind the app to the Lakebase database as a **`postgres` resource**. That provisions a
    **Postgres role for the app's service principal (SP)** and injects `DATABRICKS_CLIENT_ID`.
-2. In `app/db.py`, `get_connection()` calls
+2. In `bundle/src/app/db.py`, `get_connection()` calls
    `w.postgres.generate_database_credential(ENDPOINT_NAME)` to **mint a fresh token per
    connection** and uses it as the Postgres password. The SP's client id is the Postgres
    username.
 3. One gotcha: binding the resource lets the SP *connect and create*, but does **not** grant
    `SELECT` on the pre-existing synced tables — you grant that once (the runbook shows how).
 
-That's the entire model. Now do it: [`attendee-runbook.md`](attendee-runbook.md).
+That's the entire model. Now do it — start at [Lab 1](../labs/Lab%201%20-%20Generate%20Analytical%20Data.md).

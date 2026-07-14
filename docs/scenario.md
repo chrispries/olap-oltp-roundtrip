@@ -60,4 +60,4 @@ vibration and an open, high-priority ticket:
 - **#44** — spindle (the rotating tool) overheating
 
 So when the app opens, it immediately reads as a real cockpit: "these machines need someone
-now." (Seeded deterministically in `notebooks/01_generate_data`, Step 3.5.)
+now." (Seeded deterministically in `bundle/src/notebooks/generate_data`, Step 3.5.)
