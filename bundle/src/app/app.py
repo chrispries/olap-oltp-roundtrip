@@ -26,6 +26,13 @@ with st.sidebar:
 conn = db.get_connection()
 db.ensure_app_table(conn)
 
+# --- Round-trip: resolved work, back in the lakehouse (shown first) ----------
+st.subheader("✅ Recently resolved")
+st.caption("Every row here is also visible to the data team in Databricks SQL — that's the round-trip.")
+st.dataframe(db.recent_resolutions(conn), use_container_width=True, hide_index=True)
+
+st.divider()
+
 # --- Active alert queue ------------------------------------------------------
 st.subheader("🔴 Active alerts")
 alerts = db.open_alerts(conn)
@@ -60,9 +67,3 @@ for a in alerts:
                     except NotImplementedError:
                         st.warning("Write-back not implemented yet — complete resolve_alert() "
                                    "in db.py (workshop step).")
-
-# --- Round-trip: resolved work, back in the lakehouse ------------------------
-st.divider()
-st.subheader("✅ Recently resolved")
-st.caption("Every row here is also visible to the data team in Databricks SQL — that's the round-trip.")
-st.dataframe(db.recent_resolutions(conn), use_container_width=True, hide_index=True)
