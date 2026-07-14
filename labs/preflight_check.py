@@ -12,7 +12,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 # ⚙️ Set these to the workshop's values, then Run all.
-CATALOG          = "lakebase_workshop"   # the Unity Catalog you'll create your schema in
+CATALOG          = "catalog_workshop"   # the Unity Catalog you'll create your schema in
 LAKEBASE_PROJECT = "lakebase-workshop"   # the shared Lakebase (Postgres) project
 
 # COMMAND ----------

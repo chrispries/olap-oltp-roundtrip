@@ -15,7 +15,7 @@ these are OK?
 
 - **Run serverless notebooks** and **use a SQL warehouse** (`CAN_USE` on a running one)
 - **Create Databricks Apps** (Apps enabled + app creation allowed for the group)
-- **Unity Catalog** on a shared catalog (`lakebase_workshop`): **create schemas & tables**, plus
+- **Unity Catalog** on a shared catalog (`catalog_workshop`): **create schemas & tables**, plus
   **create catalogs on the metastore** (so each person can register their Lakebase DB in UC)
 - **Lakebase**: access to a shared Lakebase project so they can **create a database, create
   synced tables, and generate DB credentials**

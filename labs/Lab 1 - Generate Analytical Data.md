@@ -9,7 +9,7 @@ By the end of this lab, you will:
 ## Introduction
 
 This is stage 1 of the round-trip — the *analytical data you already have* in the lakehouse.
-Everyone shares one catalog (`lakebase_workshop`) but gets their **own schema** `ws_<username>`,
+Everyone shares one catalog (`catalog_workshop`) but gets their **own schema** `ws_<username>`,
 so nobody collides. The data model:
 
 | Table | Grain | Key columns |
@@ -29,13 +29,13 @@ Create a new Python notebook, attach it to **serverless**, and run each cell bel
 
 ### Step 1 — Create your catalog + schema
 
-Everyone shares the `lakebase_workshop` catalog; you get your own `ws_<username>` schema,
+Everyone shares the `catalog_workshop` catalog; you get your own `ws_<username>` schema,
 derived from your login. `CREATE ... IF NOT EXISTS` is safe to re-run.
 
 ```python
 import re
 
-CATALOG = "lakebase_workshop"
+CATALOG = "catalog_workshop"
 user = spark.sql("SELECT current_user()").first()[0]
 schema = "ws_" + re.sub(r"[^a-z0-9]", "_", user.split("@")[0].lower())
 
@@ -44,11 +44,11 @@ spark.sql(f"CREATE SCHEMA  IF NOT EXISTS {CATALOG}.{schema}")
 print(f"✅ your target is {CATALOG}.{schema}")
 ```
 
-**✅ Check:** it prints your target, e.g. `lakebase_workshop.ws_jane_doe`.
+**✅ Check:** it prints your target, e.g. `catalog_workshop.ws_jane_doe`.
 
 ### Step 2 — Generate the four tables (deterministic)
 
-Fixed seed → everyone gets identical data, which keeps the workshop reproducible.
+It uses a fixed seed, so every participant gets the same results.
 
 ```python
 import numpy as np
@@ -144,11 +144,11 @@ print(f"\n✅ All four tables loaded into {CATALOG}.{schema}")
 
 **💡 What just happened?**
 - You derived `ws_<your-username>` so your data is isolated from everyone else's.
-- The data is deterministic (fixed seed) — reproducible across the whole room.
+- It uses a fixed seed, so every participant gets the same results.
 - Each frame became a **managed Delta table** in Unity Catalog, and four machines
   (**#7, #19, #31, #44**) now carry open, high-priority alerts.
 
-> **Note:** All labs use the catalog `lakebase_workshop` and your per-user schema
+> **Note:** All labs use the catalog `catalog_workshop` and your per-user schema
 > `ws_<username>` (lowercase, non-alphanumeric → `_`). Example:
 > `jane.doe@acme.com` → `ws_jane_doe`.
 

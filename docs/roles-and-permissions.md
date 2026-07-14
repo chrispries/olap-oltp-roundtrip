@@ -28,12 +28,12 @@ those with your workspace admin using the pre-flight test at the bottom.
   (provisioning takes minutes). Grant users access to the project/branch so they can:
   create a database, create synced tables, register a UC catalog, and generate DB credentials.
 - **Unity Catalog**:
-  - Create catalog **`lakebase_workshop`**; grant the user group **`USE CATALOG`** +
+  - Create catalog **`catalog_workshop`**; grant the user group **`USE CATALOG`** +
     **`CREATE SCHEMA`** (each user creates their own `ws_<user>` schema and owns its tables).
   - Registering the Lakebase database as a UC catalog (`create-catalog`) needs
     **`CREATE CATALOG` on the metastore**. If you can't grant that to users, either grant it
     to the group for the session, or pre-register a per-user Lakebase catalog for each user.
-  - The sync pipelines need a metadata schema — pre-create **`lakebase_workshop.pipeline_storage`**
+  - The sync pipelines need a metadata schema — pre-create **`catalog_workshop.pipeline_storage`**
     (or rely on users having `CREATE SCHEMA`).
 - **Pipelines** — snapshot synced tables spin up a Lakeflow/DLT pipeline; confirm users can
   create pipelines (usually default; a restrictive cluster policy can block it).
@@ -43,7 +43,7 @@ those with your workspace admin using the pre-flight test at the bottom.
 | Capability | Needs | Notes |
 |-----------|-------|-------|
 | Run Labs 1/2/4 | serverless compute | Labs 2/3 also `%pip install -U databricks-sdk` |
-| Create catalog/schema + tables (Lab 1) | `USE CATALOG` + `CREATE SCHEMA` on `lakebase_workshop`; owner of own schema | workspace admin grants the group |
+| Create catalog/schema + tables (Lab 1) | `USE CATALOG` + `CREATE SCHEMA` on `catalog_workshop`; owner of own schema | workspace admin grants the group |
 | Create a Postgres DB, synced tables, register catalog, mint credentials (Lab 2) | access to the `lakebase-workshop` project + `CREATE CATALOG` on the metastore | see admin setup above |
 | Deploy the app (Lab 3) | permission to **create apps** | creator automatically gets `CAN_MANAGE` on their app |
 | Round-trip query (Lab 4) | `CAN_USE` on a SQL warehouse; read on their Lakebase UC catalog | they own the catalog they registered |

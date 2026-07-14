@@ -44,7 +44,7 @@ from databricks.sdk.service import sql as dbsql
 # ⚙️ EDIT THESE
 GROUP_NAME     = "lakebase-workshop-participants"
 MEMBER_EMAILS  = ["participant1@example.com", "participant2@example.com"]
-CATALOG        = "lakebase_workshop"
+CATALOG        = "catalog_workshop"
 WAREHOUSE_NAME = "Shared Endpoint"   # a running SQL warehouse to grant CAN_USE
 
 w = WorkspaceClient()
