@@ -21,10 +21,6 @@ variables:
   lakebase_project:
     description: The shared Lakebase (Postgres, autoscaling) project.
     default: lakebase-workshop
-  warehouse_id:
-    description: SQL warehouse for verification queries.
-    lookup:
-      warehouse: "Shared Endpoint"
 
 targets:
   dev:
