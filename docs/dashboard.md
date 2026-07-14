@@ -4,7 +4,7 @@ A one-page AI/BI (Lakeview) dashboard that visualizes the same `maintenance_acti
 data the app writes back — proving the round-trip visually. Build per the
 `fe-databricks-tools:databricks-lakeview-dashboard` skill.
 
-Suggested widgets (join `<lakebase_catalog>.ws_${user}.maintenance_actions` to the seeded
+Suggested widgets (join `<lakebase_catalog>.schema_${user}.maintenance_actions` to the seeded
 `maintenance_tickets` for context):
 
 1. **Open alerts remaining** — counter: open `maintenance_tickets` with no `resolved` action.

@@ -40,8 +40,8 @@ dbutils.library.restartPython()
 
 ### Step 1 — Your names
 
-You share one Lakebase **project**; you get your own **database** `ws_<username>` and UC catalog
-`lakebase_ws_<username>`.
+You share one Lakebase **project**; you get your own **database** `schema_<username>` and UC catalog
+`lakebase_schema_<username>`.
 
 ```python
 import re
@@ -55,9 +55,9 @@ PROJECT    = "lakebase-workshop"
 BRANCH     = f"projects/{PROJECT}/branches/production"
 ENDPOINT   = f"{BRANCH}/endpoints/primary"
 UC_CATALOG = "catalog_workshop"      # the Delta data from Lab 1
-SCHEMA     = f"ws_{slug}"             # your UC schema
-PGDB       = f"ws_{slug}"             # your Lakebase Postgres database
-LBCAT      = f"lakebase_ws_{slug}"    # your Lakebase → UC catalog
+SCHEMA     = f"schema_{slug}"             # your UC schema
+PGDB       = f"schema_{slug}"             # your Lakebase Postgres database
+LBCAT      = f"lakebase_schema_{slug}"    # your Lakebase → UC catalog
 
 host = w.postgres.list_endpoints(BRANCH).__next__().as_dict()["status"]["hosts"]["host"]
 print(f"PGDB={PGDB}  LBCAT={LBCAT}\nhost={host}")
@@ -144,7 +144,7 @@ for tbl in PKS:
 
 **💡 What just happened?**
 - **Snapshot** = a one-time copy of your Delta table into Postgres (continuous sync exists too).
-- Registering the database as UC catalog `lakebase_ws_<user>` federates the *whole* Postgres
+- Registering the database as UC catalog `lakebase_schema_<user>` federates the *whole* Postgres
   database — including tables your app will create later. That's the "back to analytics" leg,
   for free.
 

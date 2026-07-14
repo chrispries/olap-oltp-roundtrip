@@ -36,7 +36,7 @@ database — including tables the app creates at runtime. So:
 
 ```
 app writes resolution ──▶ Postgres public.maintenance_actions ──▶ (UC federation) ──▶
-    SELECT ... FROM lakebase_ws_<you>.public.maintenance_actions   (Databricks SQL)
+    SELECT ... FROM lakebase_schema_<you>.public.maintenance_actions   (Databricks SQL)
 ```
 
 No pipeline, no ETL, no copy. The analyst sees the operational write **live**. (In

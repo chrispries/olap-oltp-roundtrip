@@ -9,7 +9,7 @@ By the end of this lab, you will:
 ## Introduction
 
 This is stage 1 of the round-trip — the *analytical data you already have* in the lakehouse.
-Everyone shares one catalog (`catalog_workshop`) but gets their **own schema** `ws_<username>`,
+Everyone shares one catalog (`catalog_workshop`) but gets their **own schema** `schema_<username>`,
 so nobody collides. The data model:
 
 | Table | Grain | Key columns |
@@ -29,7 +29,7 @@ Create a new Python notebook, attach it to **serverless**, and run each cell bel
 
 ### Step 1 — Create your catalog + schema
 
-Everyone shares the `catalog_workshop` catalog; you get your own `ws_<username>` schema,
+Everyone shares the `catalog_workshop` catalog; you get your own `schema_<username>` schema,
 derived from your login. `CREATE ... IF NOT EXISTS` is safe to re-run.
 
 ```python
@@ -37,14 +37,14 @@ import re
 
 CATALOG = "catalog_workshop"
 user = spark.sql("SELECT current_user()").first()[0]
-schema = "ws_" + re.sub(r"[^a-z0-9]", "_", user.split("@")[0].lower())
+schema = "schema_" + re.sub(r"[^a-z0-9]", "_", user.split("@")[0].lower())
 
 spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
 spark.sql(f"CREATE SCHEMA  IF NOT EXISTS {CATALOG}.{schema}")
 print(f"✅ your target is {CATALOG}.{schema}")
 ```
 
-**✅ Check:** it prints your target, e.g. `catalog_workshop.ws_jane_doe`.
+**✅ Check:** it prints your target, e.g. `catalog_workshop.schema_jane_doe`.
 
 ### Step 2 — Generate the four tables (deterministic)
 
@@ -153,7 +153,7 @@ print(f"\n✅ All four tables loaded into {CATALOG}.{schema}")
   the people on the floor and feeding their actions back.
 
 > **Note:** All labs use the catalog `catalog_workshop` and your per-user schema
-> `ws_<username>` (lowercase, non-alphanumeric → `_`). Example:
-> `jane.doe@acme.com` → `ws_jane_doe`.
+> `schema_<username>` (lowercase, non-alphanumeric → `_`). Example:
+> `jane.doe@acme.com` → `schema_jane_doe`.
 
 ➡️ **Next: [Lab 2 – Sync to Lakebase](Lab%202%20-%20Sync%20to%20Lakebase.md).**

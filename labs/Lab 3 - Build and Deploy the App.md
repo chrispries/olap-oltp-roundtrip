@@ -54,7 +54,7 @@ user = w.current_user.me().user_name
 slug = re.sub(r"[^a-z0-9]", "_", user.split("@")[0].lower())
 BRANCH   = "projects/lakebase-workshop/branches/production"
 ENDPOINT = f"{BRANCH}/endpoints/primary"
-PGDB = f"ws_{slug}"
+PGDB = f"schema_{slug}"
 APP  = ("lb-workshop-" + slug.replace("_", "-"))[:30].rstrip("-")
 host = w.postgres.list_endpoints(BRANCH).__next__().as_dict()["status"]["hosts"]["host"]
 

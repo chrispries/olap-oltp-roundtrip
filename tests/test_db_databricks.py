@@ -23,7 +23,7 @@ branch = "projects/lakebase-workshop/branches/production"
 
 os.environ["ENDPOINT_NAME"] = f"{branch}/endpoints/primary"
 os.environ["PGHOST"] = w.postgres.list_endpoints(branch).__next__().as_dict()["status"]["hosts"]["host"]
-os.environ["PGDATABASE"] = f"ws_{slug}"
+os.environ["PGDATABASE"] = f"schema_{slug}"
 os.environ["PGUSER"] = user
 
 import sys

@@ -29,7 +29,7 @@ those with your workspace admin using the pre-flight test at the bottom.
   create a database, create synced tables, register a UC catalog, and generate DB credentials.
 - **Unity Catalog**:
   - Create catalog **`catalog_workshop`**; grant the user group **`USE CATALOG`** +
-    **`CREATE SCHEMA`** (each user creates their own `ws_<user>` schema and owns its tables).
+    **`CREATE SCHEMA`** (each user creates their own `schema_<user>` schema and owns its tables).
   - Registering the Lakebase database as a UC catalog (`create-catalog`) needs
     **`CREATE CATALOG` on the metastore**. If you can't grant that to users, either grant it
     to the group for the session, or pre-register a per-user Lakebase catalog for each user.
