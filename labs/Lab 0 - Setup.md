@@ -107,11 +107,15 @@ permission wall mid-workshop.
 
 ### Step 3 — Confirm your prerequisites
 
-Before you start, please verify:
-- You can run **serverless** notebooks.
-- You have a **running SQL Warehouse** (for the queries in Labs 2 & 4).
-- The shared Lakebase project **`lakebase-workshop`** exists (facilitator sets it up; solo?
-  Lab 2 shows how to create it).
+Open **[`labs/preflight_check.py`](preflight_check.py)**, set the two values at the top, and
+**Run all**. It actually tries each right (and cleans up after itself) and prints PASS/FAIL:
+serverless, SQL warehouse, Unity Catalog create, `CREATE CATALOG` on the metastore, Lakebase
+project access, and Apps. Any FAIL → share it with your workspace admin
+([`docs/organizer-checklist.md`](../docs/organizer-checklist.md)).
+
+You should also have:
+- The shared Lakebase project **`lakebase-workshop`** (facilitator sets it up; solo? Lab 2
+  shows how to create it).
 
 ### Step 4 — Choose your starting point
 
