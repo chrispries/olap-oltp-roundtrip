@@ -40,6 +40,10 @@ the repo folder ▸ *Copy URL/path*); it looks like `/Workspace/Users/you@co.com
 dbutils.library.restartPython()
 ```
 
+> ⚠️ `restartPython()` wipes all variables and imports (including anything from an earlier lab).
+> That's expected — the next cell re-imports and re-derives everything, so **run it right after
+> the restart.** This lab is self-contained.
+
 ```python
 import re, pathlib
 from databricks.sdk import WorkspaceClient

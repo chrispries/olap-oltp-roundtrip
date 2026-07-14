@@ -26,22 +26,27 @@ Before you start, please verify:
 - You completed **Lab 1** (your four Delta tables exist).
 - The shared Lakebase project **`lakebase-workshop`** exists.
 
-Keep working in a serverless Python notebook and run the cells below in order.
+This lab is self-contained — run its cells in order in a serverless Python notebook; it
+re-creates everything it needs, so you can run it without having run Lab 1 in the same session.
 
 ### Step 0 — Install the Lakebase SDK
 
 The workspace's default `databricks-sdk` predates the Lakebase (`postgres`) API, so upgrade it
-and add `psycopg` (to create the database). **Run this in its own cell — it restarts Python:**
+and add `psycopg` (to create the database). **Run this on its own — it restarts Python:**
 
 ```python
 %pip install -U "databricks-sdk>=0.50" "psycopg[binary]>=3.1" -q
 dbutils.library.restartPython()
 ```
 
-### Step 1 — Your names
+> ⚠️ `restartPython()` wipes all variables and imports (including anything from a previous lab).
+> That's expected — the next cell re-imports and re-derives everything, so **always run Step 1
+> right after the restart.**
 
-You share one Lakebase **project**; you get your own **database** `schema_<username>` and UC catalog
-`lakebase_schema_<username>`.
+### Step 1 — Set up (run this right after the restart)
+
+This re-imports the SDK and re-derives your identity and names — your **database**
+`schema_<username>` and UC catalog `lakebase_schema_<username>`.
 
 ```python
 import re
