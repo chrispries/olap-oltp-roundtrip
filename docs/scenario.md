@@ -49,15 +49,18 @@ the gap Lakebase + Apps close.
 > copying. From an early-warning signal all the way to a fix on the floor, and back to the
 > model that predicted it.
 
-## The demo hook (what they'll see first)
+## What you'll see first
 
-The seeded data plants four machines that clearly **need attention** — each with elevated
-vibration and an open, high-priority ticket:
+The sample data includes four machines flagged for attention — each with elevated vibration and
+an open, high-priority maintenance ticket:
 
-- **Machine #7** — vibration alarm, bearing wear
-- **#19** — coolant low
-- **#31** — calibration drift
-- **#44** — spindle (the rotating tool) overheating
+| Machine | Alert |
+|---------|-------|
+| **#7** | vibration alarm (bearing wear) |
+| **#19** | coolant low |
+| **#31** | calibration drift |
+| **#44** | spindle (rotating tool) overheating |
 
-So when the app opens, it immediately reads as a real cockpit: "these machines need someone
-now." (Seeded deterministically in Lab 1, Step 3.)
+So the app opens onto a realistic maintenance queue instead of an empty screen — you can claim
+and resolve one of these alerts right away and watch it flow back to the analytical layer. This
+data is generated deterministically (Lab 1, Step 3), so every run looks the same.
