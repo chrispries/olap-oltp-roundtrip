@@ -12,7 +12,7 @@ those with your workspace admin using the pre-flight test at the bottom.
 
 ---
 
-> **Automate steps 1–2 + the warehouse grant:** run [`../bundle/src/notebooks/admin_setup.py`](../bundle/src/notebooks/admin_setup.py)
+> **Automate steps 1–2 + the warehouse grant:** run the admin-setup cells in [Lab 0, Step 1](../labs/Lab%200%20-%20Setup.md)
 > as a workspace admin. It creates the group, adds members, sets entitlements, does the Unity
 > Catalog grants, and grants `CAN_USE` on a warehouse. The two manual bits (Lakebase project
 > access, Apps enablement) are called out in that notebook and in section 3 below.
@@ -42,7 +42,7 @@ those with your workspace admin using the pre-flight test at the bottom.
 
 | Capability | Needs | Notes |
 |-----------|-------|-------|
-| Run notebooks 00/01/04 | serverless compute | 02/03 also `%pip install -U databricks-sdk` |
+| Run Labs 1/2/4 | serverless compute | Labs 2/3 also `%pip install -U databricks-sdk` |
 | Create catalog/schema + tables (01) | `USE CATALOG` + `CREATE SCHEMA` on `lakebase_workshop`; owner of own schema | facilitator grants the group |
 | Create their Postgres DB, synced tables, register catalog, mint credentials (02) | access to the `lakebase-workshop` project + `CREATE CATALOG` on the metastore | see facilitator notes above |
 | Deploy the app (03) | permission to **create apps** | creator automatically gets `CAN_MANAGE` on their app |
@@ -56,8 +56,8 @@ resource**. It needs, in Postgres:
 | Grant | Why | Set by |
 |-------|-----|--------|
 | `CONNECT` on the database | connect at all | the resource binding (`CAN_CONNECT_AND_CREATE`) |
-| `USAGE, CREATE ON SCHEMA public` | create its `maintenance_actions` table | **notebook 03, Step 4** |
-| `pg_read_all_data` | `SELECT` on the synced tables — **all current *and future*** tables | **notebook 03, Step 4** |
+| `USAGE, CREATE ON SCHEMA public` | create its `maintenance_actions` table | **Lab 3, Step 3** |
+| `pg_read_all_data` | `SELECT` on the synced tables — **all current *and future*** tables | **Lab 3, Step 3** |
 | INSERT on `maintenance_actions` | write-back | **implicit** — the app creates & owns that table |
 
 **Opening the app:** it sits behind workspace SSO. The creator has `CAN_MANAGE`. To let *other*
@@ -70,7 +70,7 @@ Compute → Apps → *app* → Permissions (or `databricks apps set-permissions`
 
 - **`insufficientPrivilege` when opening the app** = the app SP lacks `SELECT` on a synced
   table. Postgres denies the read and psycopg raises `InsufficientPrivilege`, which surfaces in
-  the app. Fix: the `pg_read_all_data` grant in notebook 03. **Why `pg_read_all_data` and not
+  the app. Fix: the `pg_read_all_data` grant in Lab 3. **Why `pg_read_all_data` and not
   `GRANT SELECT ON ALL TABLES`:** re-creating a synced table (any re-sync) drops and recreates
   the table, and a point-in-time `GRANT SELECT` does **not** carry over — `pg_read_all_data`
   (a built-in role covering current + future tables) does.

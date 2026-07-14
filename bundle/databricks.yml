@@ -1,13 +1,14 @@
 # Databricks Asset Bundle for "App + Lakebase in a Day".
 #
-# Deploys the workshop's runnable assets (the notebooks + a setup job) so a facilitator can
-# stand up the whole stack for a demo user with one command:
+# Packages the Streamlit Maintenance Cockpit (bundle/src/app) as a deployable app resource, so a
+# facilitator can push it to a workspace with one command instead of the hands-on Lab 3 flow:
 #
-#   databricks bundle deploy -t dev -p <profile>
-#   databricks bundle run app_lakebase_setup -t dev -p <profile>
+#   databricks bundle validate -t dev -p <profile>
+#   databricks bundle deploy   -t dev -p <profile>
 #
-# Attendees don't need this — they clone the repo as a Git folder and run the labs. The bundle
-# is the facilitator / "productionized" path.
+# Everything else in the workshop is run from the labs (labs/), which contain the code inline —
+# there are no separate notebooks to deploy. After deploying the app, bind it to your Lakebase
+# database and grant its service principal (Lab 3, Steps 2–3, or the app's UI ▸ Resources).
 bundle:
   name: app-lakebase-in-a-day
 
@@ -15,12 +16,9 @@ include:
   - resources/*.yml
 
 variables:
-  catalog:
-    description: Unity Catalog that holds the analytical Delta tables.
-    default: lakebase_workshop
-  lakebase_project:
-    description: The shared Lakebase (Postgres, autoscaling) project.
-    default: lakebase-workshop
+  app_name:
+    description: Name for the deployed app.
+    default: lb-workshop-cockpit
 
 targets:
   dev:

@@ -1,29 +1,28 @@
-# Bundle — deploy the workshop stack
+# Bundle — deploy the app
 
 A [Databricks Asset Bundle](https://docs.databricks.com/dev-tools/bundles/) that packages the
-workshop's runnable assets:
+Streamlit **Maintenance Cockpit** (`src/app/`) as a deployable app resource.
 
-- `src/notebooks/` — the notebooks the labs walk through (`admin_setup`, `generate_data`,
-  `create_lakebase`, `deploy_app`, `explore_and_roundtrip`).
-- `src/app/` — the Streamlit Maintenance Cockpit app.
-- `resources/setup_job.yml` — a job that chains generate → Lakebase → app deploy.
-
-## Who uses this
-
-- **Attendees** don't need the bundle — they clone the repo as a Workspace **Git folder** and
-  run the labs (`labs/`) cell by cell.
-- **Facilitators** can use it to stand up a full demo environment (or a per-user stack) in one
-  command, and it's the "here's how you'd productionize the deploy" talking point.
+Everything else in the workshop is run from the **labs** (`../labs/`) — the code lives inline in
+each lab, so there are no separate notebooks to deploy. This bundle exists for facilitators who
+want to push the app with one command instead of the hands-on Lab 3 flow.
 
 ## Deploy
 
 ```bash
 databricks bundle validate -t dev -p <profile>
-databricks bundle deploy   -t dev -p <profile>     # uploads notebooks + app to the workspace
-databricks bundle run app_lakebase_setup -t dev -p <profile>   # generate -> Lakebase -> app
+databricks bundle deploy   -t dev -p <profile>     # uploads app/ + creates the app
+databricks bundle run maintenance_cockpit -t dev -p <profile>   # (optional) start it
 ```
 
-Variables (override with `--var` or per target in `databricks.yml`): `catalog`
-(default `lakebase_workshop`), `lakebase_project` (default `lakebase-workshop`), `warehouse_id`
-(looked up by name). The setup notebooks derive per-user names (`ws_<user>`) from the running
-identity, so the deploy provisions a complete environment for whoever runs the job.
+Override the app name with `--var app_name=<name>` (default `lb-workshop-cockpit`).
+
+## After deploy — bind the database (per user)
+
+The app needs to be bound to a Lakebase database and its service principal granted read access.
+That's per-user, so it's not in the bundle — do it once after deploy, either:
+- via **Lab 3, Steps 2–3** (the `apps` resource binding + `pg_read_all_data` grant), or
+- in the app's UI: **Compute ▸ Apps ▸ your app ▸ Edit ▸ Resources ▸ add Database**, then grant
+  the app SP `pg_read_all_data` on your database.
+
+See [`../docs/roles-and-permissions.md`](../docs/roles-and-permissions.md) for the full detail.

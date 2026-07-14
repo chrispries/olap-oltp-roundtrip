@@ -11,11 +11,11 @@
 ## Pre-provisioning checklist (facilitator, day before)
 
 - [ ] Create Lakebase instance `lakebase-workshop`, record host/catalog in `sync/*.md`.
-- [ ] **Run `bundle/src/notebooks/admin_setup.py` (workspace admin)** — creates the participant group and grants
+- [ ] **Run Lab 0, Step 1 (workspace admin)** — creates the participant group and grants
       workspace/SQL entitlements, UC `USE CATALOG`+`CREATE SCHEMA`, `CREATE CATALOG` on metastore,
       and warehouse `CAN_USE`. See [`roles-and-permissions.md`](roles-and-permissions.md).
 - [ ] Grant the participant group access to the Lakebase project + confirm Apps creation is
-      allowed (the two manual steps `admin_setup.py` prints).
+      allowed (the two manual steps Lab 0 Step 1 prints).
 - [ ] Run the full attendee flow once as a **non-admin** test user (pre-flight, see roles doc).
 
 ## Per-user namespacing (9–20 attendees)
@@ -45,7 +45,7 @@ Actual dry-run timings: _recorded in Task 8_.
   `pg_read_all_data` to the SP, which covers all current **and future** tables (survives a
   re-sync, unlike a one-time `GRANT SELECT`). Full breakdown of every role/right:
   [`roles-and-permissions.md`](roles-and-permissions.md).
-- **Data generation** — lives only in `bundle/src/notebooks/generate_data` (self-contained, no repo
+- **Data generation** — lives only in Lab 1 (self-contained, no repo
   import needed). It is the single source for the synthetic data.
 - **App auth (Autoscaling)** — do NOT use a static `PGPASSWORD`. `bundle/src/app/db.py` mints a fresh
   OAuth token per connection via `w.postgres.generate_database_credential(ENDPOINT_NAME)`.
@@ -67,7 +67,7 @@ Round-trip closed.
   https://lb-workshop-christopher-pries-984752964297111.11.azure.databricksapps.com
 - **Repo ships the write-back stubbed** (`resolve_alert`, the attendee gap). The deployed
   reference app runs the completed version; that divergence is intentional. Answer key:
-  `labs/artifacts/solutions/resolve_alert.py`.
+  Lab 3, Step 4 (shown inline).
 
 ## Productionization talking point (approach B)
 

@@ -4,7 +4,7 @@
 By the end of this lab, you will:
 - Understand the workshop **scenario** and the round-trip you'll build
 - Have the repository in your Databricks workspace as a **Git folder**
-- Have the access you need (for facilitators: provisioned it for the whole group)
+- (Facilitators) have provisioned access for the whole group
 - Know where to start
 
 ## Introduction
@@ -14,32 +14,87 @@ served operationally through Lakebase (Postgres) and a Databricks App, with the 
 flowing straight back to the analytical layer — one governed platform, no ETL in between.
 
 The example is a shop-floor **Maintenance Cockpit** (see [`docs/scenario.md`](../docs/scenario.md)),
-but the pattern fits anywhere operational people need to act on analytical data. The
-architecture at a glance:
+but the pattern fits anywhere operational people act on analytical data.
 
 ![Architecture](../docs/architecture.svg)
 
-New to the concepts? Read [`docs/concepts.md`](../docs/concepts.md) (10 min) — Lakebase vs the
-lakehouse, synced tables, and why the app's write reappears in SQL.
+New to the concepts? Read [`docs/concepts.md`](../docs/concepts.md) (10 min).
 
 ## Instructions
 
 ### Step 1 — (Facilitator / workspace admin, once) Provision access
 
-> Skip this step if you're an attendee — your facilitator has done it.
+> Attendees: skip this — your facilitator has done it. Go to Step 2.
 
-A workspace admin runs [`bundle/src/notebooks/admin_setup.py`](../bundle/src/notebooks/admin_setup.py)
-once. It creates a `lakebase-workshop-participants` group and grants it everything participants
-need: workspace + SQL entitlements, `USE CATALOG` + `CREATE SCHEMA` on `lakebase_workshop`,
-`CREATE CATALOG` on the metastore, and `CAN_USE` on a SQL warehouse.
+A workspace admin runs the cells below once. It creates a `lakebase-workshop-participants`
+group and grants it everything participants need. (Full reference:
+[`docs/roles-and-permissions.md`](../docs/roles-and-permissions.md); organizer email:
+[`docs/organizer-checklist.md`](../docs/organizer-checklist.md).)
 
-1. Open `bundle/src/notebooks/admin_setup.py`.
-2. Edit the config cell — the group name and the list of participant emails.
-3. **Run all**. Then complete the two manual steps it prints (Lakebase project access, Apps
-   creation). Full reference: [`docs/roles-and-permissions.md`](../docs/roles-and-permissions.md).
+```python
+%pip install -U "databricks-sdk>=0.50" -q
+dbutils.library.restartPython()
+```
+
+```python
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service import iam
+from databricks.sdk.service import sql as dbsql
+
+# ⚙️ EDIT THESE
+GROUP_NAME     = "lakebase-workshop-participants"
+MEMBER_EMAILS  = ["participant1@example.com", "participant2@example.com"]
+CATALOG        = "lakebase_workshop"
+WAREHOUSE_NAME = "Shared Endpoint"   # a running SQL warehouse to grant CAN_USE
+
+w = WorkspaceClient()
+
+# 1) group + workspace/SQL entitlements
+groups = list(w.groups.list(filter=f'displayName eq "{GROUP_NAME}"'))
+group = groups[0] if groups else w.groups.create(
+    display_name=GROUP_NAME,
+    entitlements=[iam.ComplexValue(value="workspace-access"),
+                  iam.ComplexValue(value="databricks-sql-access")])
+print("group id:", group.id)
+
+# 2) add members (they must already exist as users in the workspace/account)
+ids = []
+for email in MEMBER_EMAILS:
+    us = list(w.users.list(filter=f'userName eq "{email}"'))
+    ids.append(us[0].id) if us else print("⚠️  user not found:", email)
+if ids:
+    w.groups.patch(group.id,
+        schemas=[iam.PatchSchema.URN_IETF_PARAMS_SCIM_API_MESSAGES_2_0_PATCH_OP],
+        operations=[iam.Patch(op=iam.PatchOp.ADD, path="members",
+                              value=[{"value": i} for i in ids])])
+    print(f"✅ added {len(ids)} member(s)")
+
+# 3) Unity Catalog grants
+spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
+spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.pipeline_storage")
+spark.sql(f"GRANT USE CATALOG, CREATE SCHEMA ON CATALOG {CATALOG} TO `{GROUP_NAME}`")
+try:
+    spark.sql(f"GRANT CREATE CATALOG ON METASTORE TO `{GROUP_NAME}`")
+    print("✅ granted CREATE CATALOG on metastore")
+except Exception as e:
+    print("⚠️  CREATE CATALOG ON METASTORE needs a metastore admin:", str(e)[:140])
+
+# 4) SQL warehouse CAN_USE
+wh_id = next((x.id for x in w.warehouses.list() if x.name == WAREHOUSE_NAME), None)
+if wh_id:
+    w.warehouses.update_permissions(wh_id, access_control_list=[
+        dbsql.WarehouseAccessControlRequest(group_name=GROUP_NAME,
+            permission_level=dbsql.WarehousePermissionLevel.CAN_USE)])
+    print(f"✅ granted CAN_USE on warehouse {wh_id}")
+else:
+    print(f"⚠️  warehouse '{WAREHOUSE_NAME}' not found — set WAREHOUSE_NAME")
+```
+
+**Two steps stay manual** (environment/preview-specific): grant the group access to the shared
+**Lakebase project** `lakebase-workshop`, and confirm **Apps creation** is allowed for the group.
 
 **💡 What just happened?**
-Every participant is now in one group with all the rights the labs need, so nobody hits a
+Every participant is now in one group with the rights the labs need, so nobody hits a
 permission wall mid-workshop.
 
 ### Step 2 — Add the repo to your workspace (Git folder)
@@ -48,15 +103,15 @@ permission wall mid-workshop.
 2. Navigate to your home folder → **Create ▸ Git folder**.
 3. Paste the repository URL and click **Create**.
 4. Expand the folder — you'll see `labs/`, `bundle/`, and `docs/`. This brings both the lab
-   guides **and** the app code into your workspace (Lab 3 needs both).
+   guides **and** the app code into your workspace (Lab 3 deploys the app from `bundle/src/app`).
 
 ### Step 3 — Confirm your prerequisites
 
 Before you start, please verify:
 - You can run **serverless** notebooks.
-- You have access to a **SQL Warehouse** (a running one — for the queries in Labs 2 & 4).
-- The shared Lakebase project **`lakebase-workshop`** exists (facilitator sets it up; if you're
-  going solo, Lab 2 shows how to create it).
+- You have a **running SQL Warehouse** (for the queries in Labs 2 & 4).
+- The shared Lakebase project **`lakebase-workshop`** exists (facilitator sets it up; solo?
+  Lab 2 shows how to create it).
 
 ### Step 4 — Choose your starting point
 
@@ -69,7 +124,7 @@ The labs run in order and build on each other. Start at Lab 1.
 | **Lab 3** | Build & deploy the Maintenance Cockpit app; implement the write-back | [guide](Lab%203%20-%20Build%20and%20Deploy%20the%20App.md) |
 | **Lab 4** | Close the round-trip — the app's writes, live in Databricks SQL | [guide](Lab%204%20-%20Close%20the%20Round-Trip.md) |
 
-> **Facilitator shortcut:** instead of running the labs by hand, you can deploy the whole
-> stack with the bundle — see [`bundle/README.md`](../bundle/README.md).
+> **Facilitator shortcut:** instead of the labs, you can deploy the app with the bundle — see
+> [`bundle/README.md`](../bundle/README.md).
 
 ➡️ **Next: [Lab 1 – Generate Analytical Data](Lab%201%20-%20Generate%20Analytical%20Data.md).**

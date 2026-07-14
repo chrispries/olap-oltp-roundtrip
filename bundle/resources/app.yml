@@ -1,0 +1,10 @@
+# The Streamlit Maintenance Cockpit, as a deployable app resource.
+# Deploys the app code from bundle/src/app. The Lakebase database binding + service-principal
+# grant are done after deploy (Lab 3 Steps 2–3, or the app UI ▸ Resources) because they're
+# per-user (each attendee binds their own ws_<user> database).
+resources:
+  apps:
+    maintenance_cockpit:
+      name: ${var.app_name}
+      description: "App + Lakebase in a Day — Maintenance Cockpit (Streamlit)"
+      source_code_path: ../src/app
