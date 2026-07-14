@@ -30,8 +30,8 @@ back to analytics. Full write-up: [`docs/scenario.md`](docs/scenario.md).
 Run the admin-setup cells in **[Lab 0, Step 1](labs/Lab%200%20-%20Setup.md)** — they create a
 `lakebase-workshop-participants` group and grant it everything participants need (workspace +
 SQL entitlements, Unity Catalog grants, warehouse `CAN_USE`). Full privilege reference:
-[`docs/roles-and-permissions.md`](docs/roles-and-permissions.md); organizer email:
-[`docs/organizer-checklist.md`](docs/organizer-checklist.md).
+[`docs/roles-and-permissions.md`](docs/roles-and-permissions.md); access-request template:
+[`docs/access-request-template.md`](docs/access-request-template.md).
 
 ## Get started
 
@@ -58,7 +58,7 @@ checks. The runnable notebooks/app live in [`bundle/src/`](bundle/src).
 |------|---------|
 | `labs/` | The workshop guides (Lab 0–4) — each with the runnable code **inline** |
 | `bundle/` | Databricks Asset Bundle to deploy the app ([README](bundle/README.md)); `src/app/` holds the Streamlit app |
-| `docs/` | `scenario.md`, `concepts.md`, `architecture.svg`, `roles-and-permissions.md`, `organizer-checklist.md`, `facilitator-notes.md`, `design.md`, `dashboard.md` |
+| `docs/` | `scenario.md`, `concepts.md`, `architecture.svg`, `roles-and-permissions.md`, `access-request-template.md`, `dashboard.md` |
 
 ## What you'll build
 

@@ -4,7 +4,7 @@ A [Databricks Asset Bundle](https://docs.databricks.com/dev-tools/bundles/) that
 Streamlit **Maintenance Cockpit** (`src/app/`) as a deployable app resource.
 
 Everything else in the workshop is run from the **labs** (`../labs/`) — the code lives inline in
-each lab, so there are no separate notebooks to deploy. This bundle exists for facilitators who
+each lab, so there are no separate notebooks to deploy. This bundle exists for workspace admins who
 want to push the app with one command instead of the hands-on Lab 3 flow.
 
 ## Deploy

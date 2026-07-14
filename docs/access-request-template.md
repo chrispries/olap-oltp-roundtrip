@@ -29,8 +29,8 @@ Thanks!
 ---
 
 **If they say no to one of the flagged items:**
-- *No app creation* → the facilitator pre-creates each participant's app.
-- *No `CREATE CATALOG` on the metastore* → the facilitator pre-registers one Lakebase catalog per participant.
+- *No app creation* → a workspace admin pre-creates each user's app.
+- *No `CREATE CATALOG` on the metastore* → a workspace admin pre-registers one Lakebase catalog per user.
 
 **Verify it worked:** once access is granted, a participant can run
 [`labs/preflight_check.py`](../labs/preflight_check.py) — it tries each right and prints

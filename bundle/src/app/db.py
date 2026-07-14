@@ -97,7 +97,7 @@ def claim_alert(conn: psycopg.Connection, ticket_id: int, machine_id: int, techn
 
 def resolve_alert(conn: psycopg.Connection, ticket_id: int, machine_id: int,
                   technician: str, resolution: str) -> None:
-    """WORKSHOP GAP — you implement this.
+    """TODO — implement this (the guide walks you through it).
 
     Close out an alert: write (or update) its row in ACTIONS_TABLE with status 'resolved',
     the `resolution` note, the `technician`, and resolved_at = now(). Because ticket_id is

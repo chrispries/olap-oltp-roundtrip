@@ -1,7 +1,7 @@
 # Databricks Asset Bundle for "App + Lakebase in a Day".
 #
 # Packages the Streamlit Maintenance Cockpit (bundle/src/app) as a deployable app resource, so a
-# facilitator can push it to a workspace with one command instead of the hands-on Lab 3 flow:
+# workspace admin can push it to a workspace with one command instead of the hands-on Lab 3 flow:
 #
 #   databricks bundle validate -t dev -p <profile>
 #   databricks bundle deploy   -t dev -p <profile>

@@ -66,4 +66,4 @@ for a in alerts:
                         st.rerun()
                     except NotImplementedError:
                         st.warning("Write-back not implemented yet — complete resolve_alert() "
-                                   "in db.py (workshop step).")
+                                   "in db.py (see Lab 3).")

@@ -3,7 +3,7 @@
 # MAGIC # ✅ Preflight — do I have the access to run the workshop?
 # MAGIC Run all cells. Each check actually *tries* the thing (and cleans up after itself — no
 # MAGIC lasting changes) and prints **PASS / FAIL**. Share any FAILs with your workspace admin
-# MAGIC (see `docs/organizer-checklist.md`).
+# MAGIC (see `docs/access-request-template.md`).
 
 # COMMAND ----------
 # MAGIC %pip install -U "databricks-sdk>=0.50" -q
@@ -97,7 +97,7 @@ else:
     print("⚠️  Not ready yet. Ask your workspace admin about:")
     for n in fails:
         print(f"   • {n}")
-    print("\nDetails + the exact grants: docs/organizer-checklist.md")
+    print("\nDetails + the exact grants: docs/access-request-template.md")
     summary = "MISSING: " + ", ".join(fails)
 
 try:

@@ -2,9 +2,9 @@
 
 ## 🎯 Learning Objectives
 By the end of this lab, you will:
-- Understand the workshop **scenario** and the round-trip you'll build
+- Understand the **scenario** and the round-trip you'll build
 - Have the repository in your Databricks workspace as a **Git folder**
-- (Facilitators) have provisioned access for the whole group
+- (When setting up for a team) provisioned access for the group
 - Know where to start
 
 ## Introduction
@@ -22,14 +22,14 @@ New to the concepts? Read [`docs/concepts.md`](../docs/concepts.md) (10 min).
 
 ## Instructions
 
-### Step 1 — (Facilitator / workspace admin, once) Provision access
+### Step 1 — Provision access (team setup: workspace admin, once)
 
-> Attendees: skip this — your facilitator has done it. Go to Step 2.
+> Running this on your own? Skip to Step 2 — this step is only for a workspace admin setting the labs up for a team.
 
 A workspace admin runs the cells below once. It creates a `lakebase-workshop-participants`
 group and grants it everything participants need. (Full reference:
-[`docs/roles-and-permissions.md`](../docs/roles-and-permissions.md); organizer email:
-[`docs/organizer-checklist.md`](../docs/organizer-checklist.md).)
+[`docs/roles-and-permissions.md`](../docs/roles-and-permissions.md); access-request template:
+[`docs/access-request-template.md`](../docs/access-request-template.md).)
 
 ```python
 %pip install -U "databricks-sdk>=0.50" -q
@@ -111,11 +111,10 @@ Open **[`labs/preflight_check.py`](preflight_check.py)**, set the two values at 
 **Run all**. It actually tries each right (and cleans up after itself) and prints PASS/FAIL:
 serverless, SQL warehouse, Unity Catalog create, `CREATE CATALOG` on the metastore, Lakebase
 project access, and Apps. Any FAIL → share it with your workspace admin
-([`docs/organizer-checklist.md`](../docs/organizer-checklist.md)).
+([`docs/access-request-template.md`](../docs/access-request-template.md)).
 
 You should also have:
-- The shared Lakebase project **`lakebase-workshop`** (facilitator sets it up; solo? Lab 2
-  shows how to create it).
+- A Lakebase project named **`lakebase-workshop`** — a workspace admin creates it once, or create it yourself (Lab 2 shows how).
 
 ### Step 4 — Choose your starting point
 
@@ -128,7 +127,7 @@ The labs run in order and build on each other. Start at Lab 1.
 | **Lab 3** | Build & deploy the Maintenance Cockpit app; implement the write-back | [guide](Lab%203%20-%20Build%20and%20Deploy%20the%20App.md) |
 | **Lab 4** | Close the round-trip — the app's writes, live in Databricks SQL | [guide](Lab%204%20-%20Close%20the%20Round-Trip.md) |
 
-> **Facilitator shortcut:** instead of the labs, you can deploy the app with the bundle — see
+> **One-command deploy:** instead of Lab 3, you can deploy the app with the bundle — see
 > [`bundle/README.md`](../bundle/README.md).
 
 ➡️ **Next: [Lab 1 – Generate Analytical Data](Lab%201%20-%20Generate%20Analytical%20Data.md).**

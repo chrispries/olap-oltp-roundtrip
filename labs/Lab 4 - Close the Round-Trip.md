@@ -57,14 +57,38 @@ vibration-based failure model. The loop is closed.
 
 Build a one-page AI/BI dashboard over the same data — see [`docs/dashboard.md`](../docs/dashboard.md).
 
-### 🧹 Teardown (when you're done)
+### Going further
 
-To avoid lingering cost, clean up your resources — delete your app, synced tables, catalog, and
-database (the shared Lakebase project scales to zero when idle, so it's cheap to leave). The
-exact commands are in [`docs/facilitator-notes.md`](../docs/facilitator-notes.md).
+In production you might also land the app's writes into a Delta table (via a triggered CDC /
+Lakeflow job) for long-term history — while the live UC-federated query you just ran stays the
+low-latency path. Same platform, same governance.
+
+### 🧹 Teardown
+
+To avoid lingering cost, remove what you created (the Lakebase project scales to zero when idle,
+so it's cheap to leave if you'll come back). Run in a serverless notebook, or delete via the UI
+(Compute ▸ Apps, Catalog Explorer, Compute ▸ Database instances):
+
+```python
+import re
+from databricks.sdk import WorkspaceClient
+w = WorkspaceClient()
+slug = re.sub(r"[^a-z0-9]", "_", w.current_user.me().user_name.split("@")[0].lower())
+app   = ("lb-workshop-" + slug.replace("_", "-"))[:30].rstrip("-")
+lbcat = f"lakebase_ws_{slug}"
+branch = "projects/lakebase-workshop/branches/production"
+
+try: w.apps.delete(name=app)
+except Exception as e: print("app:", e)
+for t in ["machines", "sensor_readings", "production_orders", "maintenance_tickets"]:
+    try: w.postgres.delete_synced_table(name=f"synced_tables/{lbcat}.public.{t}")
+    except Exception as e: print(t, e)
+try: w.postgres.delete_catalog(name=f"catalogs/{lbcat}")
+except Exception as e: print("catalog:", e)
+print("done — drop your Postgres database ws_%s from the SQL/psql side if you want it gone too" % slug)
+```
 
 ---
 
-🎉 **That's the workshop.** You built the Apps + Lakebase round-trip end to end: analytical
-data → operational serving → an app people actually use → back to analytics, all on one
-governed platform.
+🎉 **You built the Apps + Lakebase round-trip end to end:** analytical data → operational
+serving → an app people use → back to analytics, all on one governed platform.
