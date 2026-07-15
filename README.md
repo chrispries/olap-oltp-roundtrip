@@ -1,8 +1,8 @@
-# App + Lakebase in a Day
+# OLAP ↔ OLTP Round-Trip on Databricks
 
-A hands-on workshop covering the Databricks **Apps + Lakebase round-trip** — from analytical
-data in Unity Catalog, to an operational Postgres database and a live app, and back to
-analytics. Use it for instructor-led training or self-paced learning.
+A hands-on workshop on the **OLAP ↔ OLTP round-trip** on Databricks — from analytical (OLAP)
+data in Unity Catalog, to an operational (OLTP) Postgres database on **Lakebase** and a live
+**App**, and back to analytics. Use it for instructor-led training or self-paced learning.
 
 <img src="./docs/architecture.svg" width="100%">
 
