@@ -192,7 +192,7 @@ for name, df in [
     
     # Write to Unity Catalog as a Delta table
     # mode('overwrite') replaces the table if it exists
-    sdf.write.mode('overwrite').saveAsTable(f"{CATALOG}.{schema}.{name}")
+    sdf.write.mode('overwrite').option("overwriteSchema", "true").saveAsTable(f"{CATALOG}.{schema}.{name}")
     
     # Verify the write succeeded by counting rows
     count = spark.table(f"{CATALOG}.{schema}.{name}").count()
