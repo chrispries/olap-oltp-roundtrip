@@ -52,12 +52,16 @@ Run the cells below in order in a **serverless Python notebook**.
 %sql
 -- Ensure the Unity Catalog exists (shared catalog for workshop)
 -- IF NOT EXISTS makes this safe to re-run without errors
-CREATE CATALOG IF NOT EXISTS catalog_workshop;
+-- CREATE CATALOG IF NOT EXISTS catalog_workshop;
 
 -- Verify creation by listing all catalogs
 -- You should see: main, system, hive_metastore, samples, and catalog_workshop
-SHOW CATALOGS;
+-- SHOW CATALOGS;
 ```
+
+> This cell is **commented out by default** — `catalog_workshop` already exists in the workshop
+> environment (created in Lab 1 / by an admin). Uncomment it only if you need to create the
+> catalog yourself.
 
 ### Step 2 — Check the default SDK version
 
