@@ -570,34 +570,53 @@ with psycopg.connect(
     password=w.postgres.generate_database_credential(endpoint=ENDPOINT).token,
     sslmode="require"
 ) as conn:
-    result = conn.execute("""
-        SELECT table_name
+    result = conn.execute(f"""
+        SELECT table_schema, table_name
         FROM information_schema.tables
-        WHERE table_schema = 'public'
+        WHERE table_schema IN ('{LAKEBASE_SCHEMA}', 'public')
         AND table_type = 'BASE TABLE'
-        ORDER BY table_name;
+        ORDER BY table_schema, table_name;
     """).fetchall()
     
-    print(f"📊 Tables in {PROJECT} → databricks_postgres.public:\n")
+    print(f"📊 Tables in {PROJECT} → databricks_postgres:\n")
     
     # Expected tables
     synced_expected = {'machines', 'sensor_readings', 'production_orders', 'maintenance_tickets'}
     operational_expected = {'maintenance_actions', 'work_orders', 'quality_checks', 'operator_notes'}
     
-    found_tables = {row[0] for row in result}
+    found_tables = {row[1] for row in result}
+    synced_found_tables = {row[1] for row in result if row[0] == LAKEBASE_SCHEMA}
+    operational_found_tables = {row[1] for row in result if row[0] == 'public'}
     
-    synced_found = found_tables & synced_expected
-    operational_found = found_tables & operational_expected
+    synced_found = synced_found_tables & synced_expected
+    operational_found = operational_found_tables & operational_expected
     
     if synced_found:
-        print("🔄 Synced tables (from Unity Catalog):")
+        print(f"🔄 Synced tables (schema: {LAKEBASE_SCHEMA}):")
         for t in sorted(synced_found):
             print(f"   ✅ {t}")
+        missing_synced = synced_expected - synced_found
+        if missing_synced:
+            for t in sorted(missing_synced):
+                print(f"   ❌ {t} (MISSING)")
+    else:
+        print(f"\n⏳ No synced tables found in schema '{LAKEBASE_SCHEMA}' yet")
+        print("   Synced tables may still be provisioning — wait 1-2 minutes.")
     
     if operational_found:
-        print("\n📝 Operational tables (app-writable):")
+        print("\n📝 Operational tables (schema: public):")
         for t in sorted(operational_found):
             print(f"   ✅ {t}")
+        missing_operational = operational_expected - operational_found
+        if missing_operational:
+            for t in sorted(missing_operational):
+                print(f"   ❌ {t} (MISSING)")
+    else:
+        print("\n❌ NO OPERATIONAL TABLES FOUND in 'public'!")
+        print("\n   This means Cell 9 either:")
+        print("   1. Hasn't been run yet, OR")
+        print("   2. Was run against a different project")
+        print("\n   Solution: Re-run Cell 9 to create the operational tables.")
     
     print(f"\n📊 Total user tables: {len(found_tables)}")
 ```
