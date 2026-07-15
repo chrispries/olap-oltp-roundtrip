@@ -637,7 +637,7 @@ from datetime import date, timedelta
 # Connect to Postgres
 with psycopg.connect(
     host=host, port=5432, dbname=PGDB, user=user,
-    password=pg_token(), sslmode="require", autocommit=True
+    password=w.postgres.generate_database_credential(endpoint=ENDPOINT).token, sslmode="require", autocommit=True
 ) as conn:
 
     # ─── STEP 1: INSERTs (Create New Records) ───
