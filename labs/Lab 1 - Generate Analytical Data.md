@@ -207,42 +207,41 @@ pdf = spark.table(f"{CATALOG}.{schema}.maintenance_tickets").limit(5).toPandas()
 display(pdf)
 ```
 
-### Step 5 — Verify the structure
+### Step 5 — Verify Lab 1
 
 ```python
-# Display the Unity Catalog structure we just created
+# Verify the current user's schema and tables
 print("="*70)
-print(f"✅ LAB 1 COMPLETE - UNITY CATALOG STRUCTURE")
+print(f"✅ LAB 1 COMPLETE - VERIFICATION")
 print("="*70)
 
 print(f"\n💾 Your data location: {CATALOG}.{schema}\n")
 
-# Show all schemas in the catalog
-schemas = spark.sql(f"SHOW SCHEMAS IN {CATALOG}").collect()
-print(f"📁 Catalog: {CATALOG}")
+# Check only your schema's tables
+expected_tables = ['machines', 'sensor_readings', 'production_orders', 'maintenance_tickets']
+tables = spark.sql(f"SHOW TABLES IN {CATALOG}.{schema}").collect()
+table_names = [t.tableName for t in tables]
 
-for s in schemas:
-    schema_name = s.databaseName
-    # Skip system schemas
-    if schema_name not in ['default', 'information_schema']:
-        tables = spark.sql(f"SHOW TABLES IN {CATALOG}.{schema_name}").collect()
-        
-        # Highlight YOUR schema
-        if schema_name == schema:
-            print(f"\n  ✅ {schema_name} (YOUR SCHEMA - your source tables from Lab1)")
-        else:
-            print(f"\n  📂 {schema_name}")
-        
-        if tables:
-            for t in tables:
-                count = spark.table(f"{CATALOG}.{schema_name}.{t.tableName}").count()
-                print(f"     ├─ {t.tableName:30s} {count:,} rows")
-        else:
-            print(f"     └─ (empty)")
+all_ok = True
+for tbl in expected_tables:
+    if tbl in table_names:
+        count = spark.table(f"{CATALOG}.{schema}.{tbl}").count()
+        print(f"  ✅ {tbl:30s} {count:,} rows")
+    else:
+        print(f"  ❌ {tbl:30s} MISSING")
+        all_ok = False
 
 print(f"\n" + "="*70)
-print(f"✅ SUCCESS! All 4 tables created and ready for Lab2.")
+if all_ok:
+    print(f"✅ SUCCESS! All 4 tables created and ready for Lab2.")
+else:
+    print(f"⚠️  Some tables are missing. Re-run cell 4 (data generation) and cell 8 (write to UC).")
 print("="*70)
+print(f"\n🚀 Next steps:")
+print(f"   1. Open Lab2 to sync these tables to Lakebase Postgres")
+print(f"   2. Enable Change Data Feed to track all changes")
+print(f"   3. Build a real-time operational app on top of Postgres")
+print(f"\n🔍 Explore: Click [catalog_workshop](#catalog) to browse your tables in the UI")
 ```
 
 **✅ Check:** you see `machines: 50`, `sensor_readings: 10,000`, `production_orders: 200`,
