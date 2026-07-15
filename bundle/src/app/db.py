@@ -150,19 +150,15 @@ def recent_actions(conn: psycopg.Connection, limit: int = 15) -> list[dict]:
 def log_maintenance_action(conn: psycopg.Connection, machine_id: int, ticket_id: int | None,
                            action_type: str, description: str, performed_by: str,
                            status: str) -> None:
-    """Record a maintenance action in `maintenance_actions`.
+    """TODO — implement this (Lab 3, Step 4 walks you through it).
 
-    `completed_at` is stamped only when the action is logged as completed. `performed_at`
-    defaults to now() in the table. CDF streams this write back to UC as
-    `lb_maintenance_actions_history`.
+    Insert a row into `maintenance_actions` recording the work: the machine, the ticket it
+    relates to (may be None), the `action_type` ('preventive' | 'corrective' | 'inspection'),
+    a free-text `description`, who did it (`performed_by`), and its `status` ('in_progress' |
+    'completed' | 'cancelled'). If status is 'completed', also set `completed_at = now()`.
+    Remember to commit. The completed version is shown in Lab 3, Step 4.
     """
-    with conn.cursor() as cur:
-        cur.execute(
-            """INSERT INTO maintenance_actions
-                   (machine_id, ticket_id, action_type, description, performed_by, status, completed_at)
-               VALUES (%s, %s, %s, %s, %s, %s, CASE WHEN %s = 'completed' THEN now() END)""",
-            (machine_id, ticket_id, action_type, description, performed_by, status, status))
-    conn.commit()
+    raise NotImplementedError("Not implemented yet — see Lab 3, Step 4.")
 
 
 # --- Work orders (operational, read + write) ---------------------------------
