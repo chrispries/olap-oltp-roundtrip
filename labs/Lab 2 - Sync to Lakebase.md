@@ -430,7 +430,7 @@ try:
         for tbl in expected_tables:
             try:
                 # Try to query the table
-                result = conn.execute(f"SELECT COUNT(*) FROM public.{tbl}").fetchone()
+                result = conn.execute(f"SELECT COUNT(*) FROM {LAKEBASE_SCHEMA}.{tbl}").fetchone()
                 count = result[0] if result else 0
                 print(f"  ✅ {tbl:30s} → {count:,} rows")
             except Exception as e:
