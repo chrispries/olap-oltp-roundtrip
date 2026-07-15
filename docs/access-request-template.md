@@ -9,7 +9,7 @@ rights they need. (Full technical detail: [`roles-and-permissions.md`](roles-and
 
 Hey team!
 
-I'm running an "App + Lakebase in a Day" workshop in your workspace and just want to confirm the
+I'm running an "OLAP ↔ OLTP Round-Trip" workshop in your workspace and just want to confirm the
 participants (ideally all in one group) have the rights to do the following. Could you confirm
 these are OK?
 
