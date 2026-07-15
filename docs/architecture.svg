@@ -39,7 +39,7 @@
 
   <rect class="bg" x="0" y="0" width="1280" height="692"/>
 
-  <text class="h1" x="44" y="52">Databricks Apps + Lakebase</text>
+  <text class="h1" x="44" y="52">OLAP ↔ OLTP Round-Trip on Databricks</text>
   <text class="sub" x="45" y="80">The round-trip — one governed platform, no ETL between analytics and the app</text>
 
   <path class="interact" d="M148,318 L178,318 L178,104 L1074,104 L1074,300" marker-end="url(#arrowMuted)"/>

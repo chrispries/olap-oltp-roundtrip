@@ -103,11 +103,11 @@ permission wall mid-workshop.
 
 ### Step 3 — Confirm your prerequisites
 
-Open **[`labs/preflight_check.py`](preflight_check.py)**, set the two values at the top, and
+Open **[`labs/preflight_check.py`](preflight_check.py)**, set the `CATALOG` value at the top, and
 **Run all**. It actually tries each right (and cleans up after itself) and prints PASS/FAIL:
-serverless, SQL warehouse, Unity Catalog create, `CREATE CATALOG` on the metastore, Lakebase
-project access, and Apps. Any FAIL → share it with your workspace admin
-([`docs/access-request-template.md`](../docs/access-request-template.md)).
+serverless access, Unity Catalog create-schema/table, the Change Data Feed preview (a manual
+reminder), a usable SQL warehouse, Lakebase reachability, and Apps. Any FAIL → share it with your
+workspace admin ([`docs/access-request-template.md`](../docs/access-request-template.md)).
 
 You should also have:
 - **Lakebase enabled** and permission to **create a project** — you'll create your own

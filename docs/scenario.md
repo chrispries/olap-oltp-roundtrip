@@ -50,7 +50,8 @@ the gap Lakebase + Apps close.
 
 ## What you'll see first
 
-The data is generated deterministically (`np.random.seed(42)`), so every run looks the same. Two
+The data is generated from a fixed seed (`np.random.seed(42)`), so the machines, faults, and
+priorities are the same on every run (the timestamps are relative to when you run Lab 1). Two
 things stand out immediately:
 
 - **A short list of at-risk machines.** Lab 1 runs a quick check for machines showing **both** high
