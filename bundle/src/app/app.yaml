@@ -23,6 +23,11 @@ env:
     value: "REPLACE_ME"
   - name: PGDATABASE
     value: "databricks_postgres"
+  # Schema holding the synced reference tables (machines, ...). They land in lakebase_<slug>,
+  # not public. Leave blank to auto-detect (the app finds the non-public schema with `machines`),
+  # or pin it explicitly, e.g. "lakebase_janedoe".
+  - name: PGREFSCHEMA
+    value: ""
   - name: PGPORT
     value: "5432"
   - name: PGSSLMODE

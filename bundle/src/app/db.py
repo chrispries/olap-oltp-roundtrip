@@ -1,13 +1,17 @@
 """Lakebase Postgres access for the shop-floor Maintenance Cockpit.
 
 The app talks to a single Lakebase database (`databricks_postgres`) that holds two kinds of
-tables, both in the `public` schema:
+tables, in two schemas:
 
 * **Synced reference tables** (read-only) — `machines`, `sensor_readings`, `production_orders`,
-  `maintenance_tickets`. These are SNAPSHOT replicas of the lakehouse (Lab 2, UC → Lakebase).
+  `maintenance_tickets`. SNAPSHOT replicas of the lakehouse (Lab 2, UC → Lakebase). These land in
+  the `lakebase_<user>` schema, **not** `public`.
 * **Operational tables** (read + write) — `maintenance_actions`, `work_orders`, `quality_checks`,
-  `operator_notes`. The app writes to these; Change Data Feed streams every write back to Unity
-  Catalog as `lb_*_history` Delta tables (Lab 2, Lakebase → UC). That is the round-trip.
+  `operator_notes`, in the `public` schema. The app writes to these; Change Data Feed streams every
+  write back to Unity Catalog as `lb_*_history` Delta tables (Lab 2, Lakebase → UC). The round-trip.
+
+`get_connection()` sets `search_path` to the reference schema + `public`, so every query below can
+use unqualified table names regardless of which schema a table lives in.
 
 Auth: Lakebase Autoscaling issues short-lived (~1h) OAuth tokens, not a static password, so
 `get_connection()` mints a fresh token per connection via the SDK.
@@ -37,9 +41,45 @@ def _fresh_token() -> str:
     return _workspace_client().postgres.generate_database_credential(ENDPOINT_NAME).token
 
 
+_ref_schema: str | None = None
+
+
+def _reference_schema(conn: psycopg.Connection) -> str:
+    """The Postgres schema holding the synced reference tables (machines, ...).
+
+    Synced tables land in the `lakebase_<user>` schema, not `public`. Prefer the `PGREFSCHEMA`
+    env var; otherwise auto-detect the non-public schema that contains a `machines` table.
+    Result is cached for the process.
+    """
+    global _ref_schema
+    if _ref_schema is not None:
+        return _ref_schema
+    env = os.environ.get("PGREFSCHEMA", "").strip()
+    if env:
+        _ref_schema = env
+        return _ref_schema
+    with conn.cursor() as cur:
+        cur.execute(
+            r"""SELECT table_schema FROM information_schema.tables
+                WHERE table_name = 'machines'
+                  AND table_schema NOT IN ('public', 'information_schema', 'pg_catalog')
+                  AND table_schema NOT LIKE 'pg\_%'
+                  AND table_schema NOT LIKE '\_%'
+                ORDER BY (table_schema LIKE 'lakebase\_%') DESC, table_schema
+                LIMIT 1""")
+        row = cur.fetchone()
+    _ref_schema = row[0] if row else "public"
+    return _ref_schema
+
+
 def get_connection() -> psycopg.Connection:
-    """Connect to Lakebase (Autoscaling) Postgres with a fresh per-connection OAuth token."""
-    return psycopg.connect(
+    """Connect to Lakebase (Autoscaling) Postgres with a fresh per-connection OAuth token.
+
+    Sets `search_path` to the reference schema + `public` so the app reads the synced reference
+    tables (in `lakebase_<user>`) and reads/writes the operational tables (in `public`) using
+    unqualified names.
+    """
+    conn = psycopg.connect(
         host=os.environ["PGHOST"],
         port=os.environ.get("PGPORT", "5432"),
         dbname=os.environ["PGDATABASE"],
@@ -47,6 +87,11 @@ def get_connection() -> psycopg.Connection:
         password=_fresh_token(),
         sslmode=os.environ.get("PGSSLMODE", "require"),
     )
+    ref = _reference_schema(conn)
+    with conn.cursor() as cur:
+        cur.execute(f'SET search_path TO "{ref}", public')
+    conn.commit()
+    return conn
 
 
 # --- Reference data (read-only synced tables) --------------------------------
@@ -105,15 +150,19 @@ def recent_actions(conn: psycopg.Connection, limit: int = 15) -> list[dict]:
 def log_maintenance_action(conn: psycopg.Connection, machine_id: int, ticket_id: int | None,
                            action_type: str, description: str, performed_by: str,
                            status: str) -> None:
-    """TODO — implement this (Lab 3, Step 4 walks you through it).
+    """Record a maintenance action in `maintenance_actions`.
 
-    Insert a row into `maintenance_actions` recording the work: the machine, the ticket it
-    relates to (may be None), the `action_type` ('preventive' | 'corrective' | 'inspection'),
-    a free-text `description`, who did it (`performed_by`), and its `status` ('in_progress' |
-    'completed' | 'cancelled'). If status is 'completed', also set `completed_at = now()`.
-    Remember to commit. The completed version is shown in Lab 3, Step 4.
+    `completed_at` is stamped only when the action is logged as completed. `performed_at`
+    defaults to now() in the table. CDF streams this write back to UC as
+    `lb_maintenance_actions_history`.
     """
-    raise NotImplementedError("Not implemented yet — see Lab 3, Step 4.")
+    with conn.cursor() as cur:
+        cur.execute(
+            """INSERT INTO maintenance_actions
+                   (machine_id, ticket_id, action_type, description, performed_by, status, completed_at)
+               VALUES (%s, %s, %s, %s, %s, %s, CASE WHEN %s = 'completed' THEN now() END)""",
+            (machine_id, ticket_id, action_type, description, performed_by, status, status))
+    conn.commit()
 
 
 # --- Work orders (operational, read + write) ---------------------------------
