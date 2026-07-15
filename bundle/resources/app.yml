@@ -6,5 +6,5 @@ resources:
   apps:
     maintenance_cockpit:
       name: ${var.app_name}
-      description: "App + Lakebase in a Day — Maintenance Cockpit (Streamlit)"
+      description: "OLAP ↔ OLTP Round-Trip — Maintenance Cockpit (Streamlit)"
       source_code_path: ../src/app

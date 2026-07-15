@@ -8,8 +8,5 @@ dependencies = [
     "psycopg[binary]>=3.1",
 ]
 
-[project.optional-dependencies]
-dev = ["pytest>=8", "pytest-postgresql>=6"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+# No local pytest suite: the only test (tests/test_db_databricks.py) is a Databricks notebook
+# that runs against a live Lakebase workspace, not under pytest.

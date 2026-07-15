@@ -9,7 +9,7 @@ By the end of this lab, you will:
 
 ## Introduction
 
-You're going to build the **Apps + Lakebase round-trip**: analytical data in Unity Catalog,
+You're going to build the **OLAP ↔ OLTP round-trip**: analytical data in Unity Catalog,
 served operationally through Lakebase (Postgres) and a Databricks App, with the app's writes
 flowing straight back to the analytical layer — one governed platform, no ETL in between.
 
@@ -26,7 +26,7 @@ New to the concepts? Read [`docs/concepts.md`](../docs/concepts.md) (10 min).
 
 > Running this on your own? Skip to Step 2 — this step is only for a workspace admin setting the labs up for a team.
 
-A workspace admin runs the cells below once. It creates a `lakebase-workshop-participants`
+A workspace admin runs the cells below once. It creates a `olap-oltp-roundtrip-participants`
 group and grants it everything participants need. (Full reference:
 [`docs/roles-and-permissions.md`](../docs/roles-and-permissions.md); access-request template:
 [`docs/access-request-template.md`](../docs/access-request-template.md).)
@@ -42,7 +42,7 @@ from databricks.sdk.service import iam
 from databricks.sdk.service import sql as dbsql
 
 # ⚙️ EDIT THESE
-GROUP_NAME     = "lakebase-workshop-participants"
+GROUP_NAME     = "olap-oltp-roundtrip-participants"
 MEMBER_EMAILS  = ["participant1@example.com", "participant2@example.com"]
 CATALOG        = "catalog_workshop"
 WAREHOUSE_NAME = "Shared Endpoint"   # a running SQL warehouse to grant CAN_USE

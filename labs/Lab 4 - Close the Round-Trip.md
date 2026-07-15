@@ -84,44 +84,52 @@ with no bespoke connector to maintain.
 
 To avoid lingering cost, remove what you created (Lakebase scales to zero when idle, so it's cheap
 to leave if you'll come back). **First stop CDF** from the Lakebase UI (project ▸ Change Data Feed
-▸ Stop), then run this in a serverless notebook (or delete via the UI: Compute ▸ Apps, Catalog
-Explorer, and the Lakebase project page):
+▸ Stop), then set `RUN_TEARDOWN = True` in the cell below and run it in a serverless notebook (or
+delete via the UI: Compute ▸ Apps, Catalog Explorer, and the Lakebase project page):
 
 ```python
 import re
 from databricks.sdk import WorkspaceClient
-w = WorkspaceClient()
-slug = re.sub(r"[^a-z0-9]", "", w.current_user.me().user_name.split("@")[0].lower())
-app    = ("lb-workshop-" + slug)[:30].rstrip("-")
-lbschema = f"lakebase_{slug}"
 
-# find your project
-PROJECT = None
-for i in range(1, 21):
-    c = f"lakebase-ws-{slug}-{i}"
-    try:
-        w.postgres.get_project(name=f"projects/{c}"); PROJECT = c; break
-    except Exception:
-        continue
+# ⚠️ DESTRUCTIVE. Off by default so a stray "Run all" can't delete your work.
+# Stop CDF in the Lakebase UI first, then set RUN_TEARDOWN = True and re-run.
+RUN_TEARDOWN = False
 
-# 1) delete the app
-try: w.apps.delete(name=app)
-except Exception as e: print("app:", e)
+if RUN_TEARDOWN:
+    w = WorkspaceClient()
+    slug = re.sub(r"[^a-z0-9]", "", w.current_user.me().user_name.split("@")[0].lower())
+    app    = ("lb-workshop-" + slug)[:30].rstrip("-")
+    lbschema = f"lakebase_{slug}"
 
-# 2) delete the synced tables (registered in catalog_workshop.lakebase_<you>)
-for t in ["machines", "sensor_readings", "production_orders", "maintenance_tickets"]:
-    try: w.postgres.delete_synced_table(name=f"synced_tables/catalog_workshop.{lbschema}.{t}")
-    except Exception as e: print(t, e)
+    # find your project
+    PROJECT = None
+    for i in range(1, 21):
+        c = f"lakebase-ws-{slug}-{i}"
+        try:
+            w.postgres.get_project(name=f"projects/{c}"); PROJECT = c; break
+        except Exception:
+            continue
 
-# 3) drop the schema (synced tables + lb_*_history history)
-try: spark.sql(f"DROP SCHEMA IF EXISTS catalog_workshop.{lbschema} CASCADE")
-except Exception as e: print("schema:", e)
+    # 1) delete the app
+    try: w.apps.delete(name=app)
+    except Exception as e: print("app:", e)
 
-# 4) delete the Lakebase project (drops the Postgres operational tables with it)
-if PROJECT:
-    try: w.postgres.delete_project(name=f"projects/{PROJECT}"); print(f"deleted project {PROJECT}")
-    except Exception as e: print("project:", e)
-print("done")
+    # 2) delete the synced tables (registered in catalog_workshop.lakebase_<you>)
+    for t in ["machines", "sensor_readings", "production_orders", "maintenance_tickets"]:
+        try: w.postgres.delete_synced_table(name=f"synced_tables/catalog_workshop.{lbschema}.{t}")
+        except Exception as e: print(t, e)
+
+    # 3) drop the schema (synced tables + lb_*_history history)
+    try: spark.sql(f"DROP SCHEMA IF EXISTS catalog_workshop.{lbschema} CASCADE")
+    except Exception as e: print("schema:", e)
+
+    # 4) delete the Lakebase project (drops the Postgres operational tables with it)
+    if PROJECT:
+        try: w.postgres.delete_project(name=f"projects/{PROJECT}"); print(f"deleted project {PROJECT}")
+        except Exception as e: print("project:", e)
+    print("done")
+else:
+    print("Teardown skipped — set RUN_TEARDOWN = True (and stop CDF first) to remove resources.")
 ```
 
 ---

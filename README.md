@@ -28,7 +28,7 @@ lakehouse. Full write-up: [`docs/scenario.md`](docs/scenario.md).
 ## Before the workshop (workspace admin, once)
 
 Run the admin-setup cells in **[Lab 0, Step 1](labs/Lab%200%20-%20Setup.md)** — they create a
-`lakebase-workshop-participants` group and grant it everything participants need (workspace +
+`olap-oltp-roundtrip-participants` group and grant it everything participants need (workspace +
 SQL entitlements, Unity Catalog grants, warehouse `CAN_USE`). Full privilege reference:
 [`docs/roles-and-permissions.md`](docs/roles-and-permissions.md); access-request template:
 [`docs/access-request-template.md`](docs/access-request-template.md).

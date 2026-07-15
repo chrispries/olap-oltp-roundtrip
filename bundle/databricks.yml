@@ -1,4 +1,4 @@
-# Databricks Asset Bundle for "App + Lakebase in a Day".
+# Databricks Asset Bundle for "OLAP ↔ OLTP Round-Trip on Databricks".
 #
 # Packages the Streamlit Maintenance Cockpit (bundle/src/app) as a deployable app resource, so a
 # workspace admin can push it to a workspace with one command instead of the hands-on Lab 3 flow:
@@ -10,7 +10,7 @@
 # there are no separate notebooks to deploy. After deploying the app, bind it to your Lakebase
 # database and grant its service principal (Lab 3, Steps 2–3, or the app's UI ▸ Resources).
 bundle:
-  name: app-lakebase-in-a-day
+  name: olap-oltp-roundtrip
 
 include:
   - resources/*.yml
