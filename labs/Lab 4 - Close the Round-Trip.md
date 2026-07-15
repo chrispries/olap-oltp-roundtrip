@@ -12,50 +12,54 @@ By the end of this lab, you will:
 In Lab 3 the app wrote to the operational Postgres tables (`maintenance_actions`, and via the
 other tabs `work_orders`, `quality_checks`, `operator_notes`). Because you started **Change Data
 Feed** in Lab 2, every one of those writes streams back into Unity Catalog as an
-`lb_<table>_history` Delta table — landing in **`catalog_workshop.schema_<you>`** (the CDF
-destination you chose), within ~15 seconds. That's the "back to analytics" leg, and it's a real
+`lb_<table>_history` Delta table — landing in **`catalog_workshop.lakebase_<you>`** (the CDF
+destination you chose), within ~15–30 seconds. That's the "back to analytics" leg, and it's a real
 change-data pipeline, not a manual copy.
 
 ## Instructions
 
 Before you start, please verify:
 - You completed **Lab 3** and logged at least one maintenance action in the app.
-- CDF has been running (Lab 2, Step 7) — give it ~15–30s after your last write.
+- CDF has been running (Lab 2, Step 10) — give it ~15–30s after your last write.
 
 Run these in the **SQL Editor** (or a notebook `%sql` cell). Replace `<you>` with your slug —
-e.g. `jane.doe@acme.com` → `janedoe`, so the schema is `catalog_workshop.schema_janedoe`.
+e.g. `jane.doe@acme.com` → `janedoe`, so the schema is `catalog_workshop.lakebase_janedoe`.
 
 ### Step 1 — See the history tables CDF produced
 
 ```sql
-SHOW TABLES IN catalog_workshop.schema_<you> LIKE 'lb_*';
+SHOW TABLES IN catalog_workshop.lakebase_<you> LIKE 'lb_*';
 ```
 
 **✅ Check:** you see `lb_maintenance_actions_history` (and, once you've used the other tabs,
-`lb_work_orders_history`, `lb_quality_checks_history`, `lb_operator_notes_history`).
+`lb_work_orders_history`, `lb_quality_checks_history`, `lb_operator_notes_history`) — alongside the
+four synced reference tables in the same schema.
 
 ### Step 2 — Read what the technician did, from Databricks SQL
 
 ```sql
-SELECT * FROM catalog_workshop.schema_<you>.lb_maintenance_actions_history
-ORDER BY started_at DESC;
+SELECT * FROM catalog_workshop.lakebase_<you>.lb_maintenance_actions_history
+ORDER BY performed_at DESC;
 ```
 
 **✅ Check:** the action you logged in the app appears here. **That's the round-trip** — an
 operational write, captured into the lakehouse by CDF, no hand-written ETL. 🎉
 
 > Empty result? Open the app, log an action, wait ~15s, then re-run. CDF flushes in ~15s batches.
+> Each row carries a `_change_type` column (`insert` / `update_postimage` / `delete`) so you can
+> see the full change history, not just the latest state.
 
 ### Step 3 — The metric the data team gets back: time-to-fix
 
-Join the completed actions to the original alerts to compute how long each fix took:
+Join the completed actions to the original alerts to compute how long each fix took. Everything is
+in one schema — the synced `machines` / `maintenance_tickets` and the CDF history:
 
 ```sql
 SELECT h.machine_id, m.model, h.performed_by, h.action_type, h.description,
        round((unix_timestamp(h.completed_at) - unix_timestamp(t.opened_at)) / 3600.0, 1) AS hours_to_fix
-FROM catalog_workshop.schema_<you>.lb_maintenance_actions_history h
-JOIN catalog_workshop.schema_<you>.machines m            ON m.machine_id = h.machine_id
-LEFT JOIN catalog_workshop.schema_<you>.maintenance_tickets t ON t.ticket_id = h.ticket_id
+FROM catalog_workshop.lakebase_<you>.lb_maintenance_actions_history h
+JOIN catalog_workshop.lakebase_<you>.machines m             ON m.machine_id = h.machine_id
+LEFT JOIN catalog_workshop.lakebase_<you>.maintenance_tickets t ON t.ticket_id = h.ticket_id
 WHERE h.status = 'completed'
 ORDER BY h.completed_at DESC;
 ```
@@ -88,25 +92,32 @@ import re
 from databricks.sdk import WorkspaceClient
 w = WorkspaceClient()
 slug = re.sub(r"[^a-z0-9]", "", w.current_user.me().user_name.split("@")[0].lower())
-app   = ("lb-workshop-" + slug)[:30].rstrip("-")
-lbcat = f"lakebase_schema_{slug}"
+app    = ("lb-workshop-" + slug)[:30].rstrip("-")
+lbschema = f"lakebase_{slug}"
 
 # find your project
 PROJECT = None
-for i in range(1, 11):
+for i in range(1, 21):
     c = f"lakebase-ws-{slug}-{i}"
     try:
         w.postgres.get_project(name=f"projects/{c}"); PROJECT = c; break
     except Exception:
         continue
 
+# 1) delete the app
 try: w.apps.delete(name=app)
 except Exception as e: print("app:", e)
+
+# 2) delete the synced tables (registered in catalog_workshop.lakebase_<you>)
 for t in ["machines", "sensor_readings", "production_orders", "maintenance_tickets"]:
-    try: w.postgres.delete_synced_table(name=f"synced_tables/{lbcat}.public.{t}")
+    try: w.postgres.delete_synced_table(name=f"synced_tables/catalog_workshop.{lbschema}.{t}")
     except Exception as e: print(t, e)
-try: w.postgres.delete_catalog(name=f"catalogs/{lbcat}")
-except Exception as e: print("catalog:", e)
+
+# 3) drop the schema (synced tables + lb_*_history history)
+try: spark.sql(f"DROP SCHEMA IF EXISTS catalog_workshop.{lbschema} CASCADE")
+except Exception as e: print("schema:", e)
+
+# 4) delete the Lakebase project (drops the Postgres operational tables with it)
 if PROJECT:
     try: w.postgres.delete_project(name=f"projects/{PROJECT}"); print(f"deleted project {PROJECT}")
     except Exception as e: print("project:", e)

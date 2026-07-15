@@ -49,16 +49,12 @@ def uc_write():
     return f"created, wrote, read and dropped a temp schema in {CATALOG}"
 check(f"Unity Catalog — create schema/table/select in '{CATALOG}'", uc_write)
 
-# 3 — CREATE CATALOG on the metastore (Lab 2 registers a Lakebase database as a UC catalog)
-def create_catalog():
-    c = f"preflight_cat_{slug}_{tag}"
-    spark.sql(f"CREATE CATALOG {c}")          # the real test
-    try:
-        spark.sql(f"DROP CATALOG {c} CASCADE")  # best-effort cleanup (fresh catalog isn't empty)
-    except Exception as drop_err:
-        print(f"   (note: created OK; cleanup left {c} — drop it manually: {str(drop_err)[:80]})")
-    return "can create a catalog"
-check("CREATE CATALOG on the metastore", create_catalog)
+# 3 — CDF preview reachable (Lab 2 streams Postgres changes back to UC via Change Data Feed)
+# The SDK can't toggle the preview; this just flags that it must be enabled on the Previews page.
+def cdf_note():
+    return ("Lab 2 needs the Lakebase Change Data Feed preview enabled (workspace Previews page). "
+            "There's no API to check it — confirm with your workspace admin.")
+check("Change Data Feed preview (manual check)", cdf_note)
 
 # 4 — A SQL warehouse you can use (Labs 2 & 4)
 def warehouse():

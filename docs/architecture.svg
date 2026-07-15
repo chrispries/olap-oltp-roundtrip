@@ -97,7 +97,7 @@
 
   <path class="flow" d="M474,338 L576,338" marker-end="url(#arrow)"/>
   <circle class="badge" cx="500" cy="318" r="12"/><text class="bnum" x="500" y="322" text-anchor="middle">1</text>
-  <text class="flab" x="556" y="322" text-anchor="middle">sync (continuous)</text>
+  <text class="flab" x="556" y="322" text-anchor="middle">sync (snapshot)</text>
 
   <path class="flow" d="M764,346 L980,346" marker-end="url(#arrow)"/>
   <circle class="badge" cx="792" cy="326" r="12"/><text class="bnum" x="792" y="330" text-anchor="middle">2</text>

@@ -62,7 +62,7 @@ checks. The runnable notebooks/app live in [`bundle/src/`](bundle/src).
 
 ## What you'll build
 
-`UC Delta ─①CONTINUOUS sync→ Lakebase synced tables ─②reads→ Streamlit app ─③write→ operational tables ─④Change Data Feed→ lb_*_history in Databricks SQL`
+`UC Delta ─①SNAPSHOT sync→ Lakebase synced tables ─②reads→ Streamlit app ─③write→ operational tables ─④Change Data Feed→ lb_*_history in Databricks SQL`
 
 One governed platform serves both the analyst and the person on the floor — and their actions
 make the analytics smarter. No second database to secure, no ETL between the two worlds.

@@ -4,7 +4,7 @@ The app talks to a single Lakebase database (`databricks_postgres`) that holds t
 tables, both in the `public` schema:
 
 * **Synced reference tables** (read-only) — `machines`, `sensor_readings`, `production_orders`,
-  `maintenance_tickets`. These are CONTINUOUS replicas of the lakehouse (Lab 2, UC → Lakebase).
+  `maintenance_tickets`. These are SNAPSHOT replicas of the lakehouse (Lab 2, UC → Lakebase).
 * **Operational tables** (read + write) — `maintenance_actions`, `work_orders`, `quality_checks`,
   `operator_notes`. The app writes to these; Change Data Feed streams every write back to Unity
   Catalog as `lb_*_history` Delta tables (Lab 2, Lakebase → UC). That is the round-trip.
@@ -75,7 +75,7 @@ def open_alerts(conn: psycopg.Connection) -> list[dict]:
                 SELECT performed_by, status
                 FROM maintenance_actions
                 WHERE ticket_id = t.ticket_id
-                ORDER BY started_at DESC
+                ORDER BY performed_at DESC
                 LIMIT 1
             ) a ON true
             WHERE t.status = 'open'
@@ -94,10 +94,10 @@ def recent_actions(conn: psycopg.Connection, limit: int = 15) -> list[dict]:
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute("""
             SELECT a.action_id, a.machine_id, m.model, a.action_type, a.description,
-                   a.performed_by, a.status, a.started_at, a.completed_at
+                   a.performed_by, a.status, a.performed_at, a.completed_at
             FROM maintenance_actions a
             JOIN machines m ON m.machine_id = a.machine_id
-            ORDER BY a.started_at DESC
+            ORDER BY a.performed_at DESC
             LIMIT %s""", (limit,))
         return cur.fetchall()
 

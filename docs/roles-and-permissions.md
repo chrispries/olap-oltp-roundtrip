@@ -26,21 +26,17 @@ those with your workspace admin using the pre-flight test at the bottom.
     restrict app creation to a group — add the user group).
 - **Lakebase** — enabled in the workspace, and users allowed to **create their own projects**
   (each user creates `lakebase-ws-<user>-N` in Lab 2 — there is no shared project). That lets
-  them create synced tables, create operational tables, register a UC catalog, and generate DB
-  credentials.
+  them create synced tables, create operational tables, and generate DB credentials.
 - **Change Data Feed (CDF) preview** — enable it on the workspace **Previews** page (it's a
   preview feature). Lab 2's Lakebase → UC round-trip depends on it.
 - **Unity Catalog**:
   - Create catalog **`catalog_workshop`**; grant the user group **`USE CATALOG`** +
-    **`CREATE SCHEMA`** (each user creates their own `schema_<user>` schema and owns its tables).
-    This catalog also receives the CDF `lb_*_history` output.
-  - Registering the Lakebase database as a UC catalog (`create-catalog`, → `lakebase_schema_<user>`)
-    needs **`CREATE CATALOG` on the metastore**. If you can't grant that to users, grant it to the
-    group for the session.
-  - The sync pipelines need a metadata schema — pre-create **`catalog_workshop.pipeline_storage`**
-    (or rely on users having `CREATE SCHEMA`).
-- **Pipelines** — `CONTINUOUS` synced tables spin up a Lakeflow/DLT pipeline; confirm users can
-  create pipelines (usually default; a restrictive cluster policy can block it).
+    **`CREATE SCHEMA`** (each user creates their own `schema_<user>` **and** `lakebase_<user>`
+    schemas and owns their tables). The synced replicas and the CDF `lb_*_history` output both land
+    in `catalog_workshop.lakebase_<user>` — so no separate catalog and **no `CREATE CATALOG` on the
+    metastore** is needed anymore.
+- **Pipelines** — synced tables spin up a Lakeflow/DLT pipeline; confirm users can create pipelines
+  (usually default; a restrictive cluster policy can block it).
 
 ## 2. User privileges
 
@@ -48,9 +44,9 @@ those with your workspace admin using the pre-flight test at the bottom.
 |-----------|-------|-------|
 | Run Labs 1/2/4 | serverless compute | Labs 2/3 also `%pip install -U databricks-sdk` |
 | Create catalog/schema + tables (Lab 1) | `USE CATALOG` + `CREATE SCHEMA` on `catalog_workshop`; owner of own schema | workspace admin grants the group |
-| Create a Lakebase project, synced tables, operational tables, register catalog, mint credentials (Lab 2) | permission to **create Lakebase projects** + `CREATE CATALOG` on the metastore + CDF preview enabled | see admin setup above |
+| Create a Lakebase project, synced tables, operational tables, mint credentials (Lab 2) | permission to **create Lakebase projects** + `CREATE SCHEMA` on `catalog_workshop` + CDF preview enabled | see admin setup above |
 | Deploy the app (Lab 3) | permission to **create apps** | creator automatically gets `CAN_MANAGE` on their app |
-| Round-trip query (Lab 4) | `CAN_USE` on a SQL warehouse; read on their `catalog_workshop.schema_<user>` schema | they own the schema; CDF lands `lb_*_history` there |
+| Round-trip query (Lab 4) | `CAN_USE` on a SQL warehouse; read on their `catalog_workshop.lakebase_<user>` schema | they own the schema; CDF lands `lb_*_history` there |
 
 ## 3. App service principal (auto-provisioned at deploy)
 

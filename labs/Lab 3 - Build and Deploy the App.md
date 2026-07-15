@@ -136,9 +136,9 @@ print("URL:", w.apps.get(name=APP).url)
 ```
 
 **✅ Check:** deploy reaches **SUCCEEDED** and prints a URL. Open it — the **Alerts & actions**
-tab shows the flagged machines (e.g. *Press Brake #44 – spindle overheating*), plus tabs for
-**Work orders**, **Quality checks**, and **Operator notes**. The **Log action** button shows a
-"not implemented yet" warning — that's your job next.
+tab shows the open maintenance tickets from Lab 1 (e.g. *Unusual vibration detected* on a
+`CNC-X1000`), plus tabs for **Work orders**, **Quality checks**, and **Operator notes**. The
+**Log action** button shows a "not implemented yet" warning — that's your job next.
 
 > **💡 Permissions note.** If the app shows `insufficientPrivilege`, the grants above are the fix.
 > Full detail: [`docs/roles-and-permissions.md`](../docs/roles-and-permissions.md).

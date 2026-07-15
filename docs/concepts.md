@@ -16,7 +16,7 @@ lakehouse → Postgres → app → back to lakehouse — is the whole workshop.
 |-------|------------|----------------------------|
 | **Unity Catalog (UC) + Delta** | Governed analytical tables (columnar, great for scans/joins, not for single-row lookups) | A data warehouse / lakehouse |
 | **Lakebase** | Fully-managed **PostgreSQL** (OLTP: fast single-row reads/writes, transactions) | A normal Postgres server, but serverless & scale-to-zero |
-| **Synced table** | A **read-only** copy of a Delta table, `CONTINUOUS`ly mirrored *into* Lakebase Postgres | A live read replica of your reference data |
+| **Synced table** | A **read-only** copy of a Delta table mirrored *into* Lakebase Postgres (here a one-time `SNAPSHOT`; `CONTINUOUS` and `TRIGGERED` modes also exist) | A read replica of your reference data |
 | **Change Data Feed (CDF)** | Streams every `INSERT`/`UPDATE`/`DELETE` on a Postgres table back into UC as an `lb_*_history` Delta table | Logical replication / CDC into your warehouse |
 | **Databricks App** | A container (here: Streamlit) that runs next to your data and talks to Lakebase over normal Postgres | A small web app with a Postgres connection |
 
@@ -40,16 +40,16 @@ them is captured and streamed into Unity Catalog as a Delta table named `lb_<tab
 
 ```
 app logs an action ──▶ Postgres public.maintenance_actions ──▶ (CDF, ~15s batches) ──▶
-    SELECT ... FROM catalog_workshop.schema_<you>.lb_maintenance_actions_history   (Databricks SQL)
+    SELECT ... FROM catalog_workshop.lakebase_<you>.lb_maintenance_actions_history   (Databricks SQL)
 ```
 
 No bespoke connector, no manual ETL — CDF is the pipeline. The analyst sees each operational
 write land in the lakehouse within seconds, as governed Delta, with full change history
 (inserts, updates, and deletes).
 
-> There are two catalogs in play: **`catalog_workshop`** holds your source Delta tables *and*
-> the `lb_*_history` output; **`lakebase_schema_<you>`** is where the read-only synced reference
-> tables register in UC. Don't confuse the two.
+> Everything lives in **one catalog**, `catalog_workshop`, across two schemas: **`schema_<you>`**
+> holds your Lab 1 source Delta tables, and **`lakebase_<you>`** holds both the read-only synced
+> reference tables *and* the `lb_*_history` CDF output. Don't confuse the two schemas.
 
 ## How the app authenticates to Lakebase (don't skip this — it's the tricky bit)
 

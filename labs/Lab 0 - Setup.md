@@ -69,15 +69,10 @@ if ids:
                               value=[{"value": i} for i in ids])])
     print(f"✅ added {len(ids)} member(s)")
 
-# 3) Unity Catalog grants
+# 3) Unity Catalog grants — each user creates their own schema_<user> and lakebase_<user>
+# schemas inside catalog_workshop and owns their tables (no metastore-level catalog needed).
 spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
-spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.pipeline_storage")
 spark.sql(f"GRANT USE CATALOG, CREATE SCHEMA ON CATALOG {CATALOG} TO `{GROUP_NAME}`")
-try:
-    spark.sql(f"GRANT CREATE CATALOG ON METASTORE TO `{GROUP_NAME}`")
-    print("✅ granted CREATE CATALOG on metastore")
-except Exception as e:
-    print("⚠️  CREATE CATALOG ON METASTORE needs a metastore admin:", str(e)[:140])
 
 # 4) SQL warehouse CAN_USE
 wh_id = next((x.id for x in w.warehouses.list() if x.name == WAREHOUSE_NAME), None)
