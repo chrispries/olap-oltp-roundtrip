@@ -107,8 +107,12 @@ def open_alerts(conn: psycopg.Connection) -> list[dict]:
     """Open maintenance alerts (seeded tickets), worst priority first.
 
     Reads the read-only `maintenance_tickets` synced table, joins `machines` for context, and
-    left-joins the app's own `maintenance_actions` so we can show whether anyone has logged work
-    against the ticket yet.
+    left-joins the app's own `maintenance_actions` for the latest action on each ticket.
+
+    The synced ticket table is read-only (its `status` never changes), so "closing" an alert is
+    driven by our own `maintenance_actions`: once the latest action on a ticket is 'completed',
+    the alert drops off this queue. Tickets with an 'in_progress' action stay, tagged with who's
+    on it.
     """
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute("""
@@ -124,6 +128,7 @@ def open_alerts(conn: psycopg.Connection) -> list[dict]:
                 LIMIT 1
             ) a ON true
             WHERE t.status = 'open'
+              AND (a.status IS NULL OR a.status <> 'completed')   -- hide alerts already completed
             ORDER BY CASE t.priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
                      t.opened_at""")
         return cur.fetchall()
