@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile Python (app + preflight)
+        run: |
+          python -m py_compile bundle/src/app/*.py
+          python -m py_compile "labs/preflight_check.py"
+
+      - name: Validate notebooks are well-formed .ipynb
+        run: |
+          python - <<'PY'
+          import glob, json, sys
+          ok = True
+          for path in sorted(glob.glob("notebooks/*.ipynb")):
+              try:
+                  nb = json.load(open(path))
+                  assert nb.get("nbformat") == 4, "nbformat != 4"
+                  cells = nb.get("cells")
+                  assert isinstance(cells, list) and cells, "no cells"
+                  print(f"OK   {path}  ({len(cells)} cells)")
+              except Exception as e:
+                  ok = False
+                  print(f"FAIL {path}: {e}")
+          sys.exit(0 if ok else 1)
+          PY
