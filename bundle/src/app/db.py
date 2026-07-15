@@ -1,10 +1,16 @@
 """Lakebase Postgres access for the shop-floor Maintenance Cockpit.
 
-Reads (machines, open alerts) come from the read-only *synced tables* — replicas of the
-lakehouse. Because those are read-only, the technician's work is written to an app-owned
-table, `maintenance_actions` (claim + resolution). An alert leaves the queue once it has a
-resolution. And because the Lakebase database is registered in Unity Catalog, every
-resolution is queryable from Databricks SQL — closing the round-trip.
+The app talks to a single Lakebase database (`databricks_postgres`) that holds two kinds of
+tables, both in the `public` schema:
+
+* **Synced reference tables** (read-only) — `machines`, `sensor_readings`, `production_orders`,
+  `maintenance_tickets`. These are CONTINUOUS replicas of the lakehouse (Lab 2, UC → Lakebase).
+* **Operational tables** (read + write) — `maintenance_actions`, `work_orders`, `quality_checks`,
+  `operator_notes`. The app writes to these; Change Data Feed streams every write back to Unity
+  Catalog as `lb_*_history` Delta tables (Lab 2, Lakebase → UC). That is the round-trip.
+
+Auth: Lakebase Autoscaling issues short-lived (~1h) OAuth tokens, not a static password, so
+`get_connection()` mints a fresh token per connection via the SDK.
 """
 import os
 
@@ -12,10 +18,8 @@ import psycopg
 from psycopg.rows import dict_row
 from databricks.sdk import WorkspaceClient
 
-ACTIONS_TABLE = "maintenance_actions"
-
 # Fully-qualified Autoscaling endpoint, e.g.
-# "projects/<project>/branches/<branch>/endpoints/<endpoint>". Set in app.yaml.
+# "projects/<project>/branches/<branch>/endpoints/<endpoint>". Set in app.yaml at deploy time.
 ENDPOINT_NAME = os.environ.get("ENDPOINT_NAME")
 
 _ws_client: WorkspaceClient | None = None
@@ -45,79 +49,157 @@ def get_connection() -> psycopg.Connection:
     )
 
 
-def ensure_app_table(conn: psycopg.Connection) -> None:
-    """Create the app-owned actions table (one action per alert ticket)."""
-    with conn.cursor() as cur:
-        cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS {ACTIONS_TABLE} (
-                action_id   bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                ticket_id   bigint NOT NULL UNIQUE,
-                machine_id  bigint NOT NULL,
-                technician  text   NOT NULL,
-                status      text   NOT NULL DEFAULT 'in_progress',  -- in_progress | resolved
-                resolution  text,
-                claimed_at  timestamptz NOT NULL DEFAULT now(),
-                resolved_at timestamptz
-            )""")
-        conn.commit()
+# --- Reference data (read-only synced tables) --------------------------------
+
+def machines(conn: psycopg.Connection) -> list[dict]:
+    """All machines, for context and dropdowns."""
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute("SELECT machine_id, model, line, location FROM machines ORDER BY machine_id")
+        return cur.fetchall()
 
 
 def open_alerts(conn: psycopg.Connection) -> list[dict]:
-    """Open maintenance alerts not yet resolved, worst priority first.
+    """Open maintenance alerts (seeded tickets), worst priority first.
 
-    Alerts come from the seeded, read-only `maintenance_tickets` synced table, joined to
-    `machines` for context and to `maintenance_actions` to show who (if anyone) has claimed it.
+    Reads the read-only `maintenance_tickets` synced table, joins `machines` for context, and
+    left-joins the app's own `maintenance_actions` so we can show whether anyone has logged work
+    against the ticket yet.
     """
     with conn.cursor(row_factory=dict_row) as cur:
-        cur.execute(f"""
+        cur.execute("""
             SELECT t.ticket_id, t.machine_id, m.model, m.line, t.priority, t.description,
-                   a.technician AS claimed_by, a.status AS action_status
+                   a.performed_by AS actioned_by, a.status AS action_status
             FROM maintenance_tickets t
             JOIN machines m ON m.machine_id = t.machine_id
-            LEFT JOIN {ACTIONS_TABLE} a ON a.ticket_id = t.ticket_id
-            WHERE t.status = 'open' AND (a.status IS NULL OR a.status <> 'resolved')
+            LEFT JOIN LATERAL (
+                SELECT performed_by, status
+                FROM maintenance_actions
+                WHERE ticket_id = t.ticket_id
+                ORDER BY started_at DESC
+                LIMIT 1
+            ) a ON true
+            WHERE t.status = 'open'
             ORDER BY CASE t.priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
                      t.opened_at""")
         return cur.fetchall()
 
 
-def claim_alert(conn: psycopg.Connection, ticket_id: int, machine_id: int, technician: str) -> None:
-    """Sign yourself onto an alert (marks it in progress under your name)."""
-    with conn.cursor() as cur:
-        cur.execute(
-            f"""INSERT INTO {ACTIONS_TABLE} (ticket_id, machine_id, technician, status)
-                VALUES (%s, %s, %s, 'in_progress')
-                ON CONFLICT (ticket_id)
-                DO UPDATE SET technician = EXCLUDED.technician, status = 'in_progress',
-                              claimed_at = now()""",
-            (ticket_id, machine_id, technician),
-        )
-    conn.commit()
+# --- Maintenance actions (operational, read + write) -------------------------
+
+def recent_actions(conn: psycopg.Connection, limit: int = 15) -> list[dict]:
+    """Latest maintenance actions — the round-trip made visible in-app.
+
+    Every row here also lands in Unity Catalog as `lb_maintenance_actions_history` via CDF.
+    """
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute("""
+            SELECT a.action_id, a.machine_id, m.model, a.action_type, a.description,
+                   a.performed_by, a.status, a.started_at, a.completed_at
+            FROM maintenance_actions a
+            JOIN machines m ON m.machine_id = a.machine_id
+            ORDER BY a.started_at DESC
+            LIMIT %s""", (limit,))
+        return cur.fetchall()
 
 
-def resolve_alert(conn: psycopg.Connection, ticket_id: int, machine_id: int,
-                  technician: str, resolution: str) -> None:
-    """TODO — implement this (the guide walks you through it).
+def log_maintenance_action(conn: psycopg.Connection, machine_id: int, ticket_id: int | None,
+                           action_type: str, description: str, performed_by: str,
+                           status: str) -> None:
+    """TODO — implement this (Lab 3, Step 4 walks you through it).
 
-    Close out an alert: write (or update) its row in ACTIONS_TABLE with status 'resolved',
-    the `resolution` note, the `technician`, and resolved_at = now(). Because ticket_id is
-    UNIQUE, use `INSERT ... ON CONFLICT (ticket_id) DO UPDATE`. Remember to commit.
-    The completed version is shown in Lab 3, Step 4.
+    Insert a row into `maintenance_actions` recording the work: the machine, the ticket it
+    relates to (may be None), the `action_type` ('preventive' | 'corrective' | 'inspection'),
+    a free-text `description`, who did it (`performed_by`), and its `status` ('in_progress' |
+    'completed' | 'cancelled'). If status is 'completed', also set `completed_at = now()`.
+    Remember to commit. The completed version is shown in Lab 3, Step 4.
     """
     raise NotImplementedError("Not implemented yet — see Lab 3, Step 4.")
 
 
-def recent_resolutions(conn: psycopg.Connection, limit: int = 15) -> list[dict]:
-    """Resolved alerts — the round-trip made visible in-app (also queryable in Databricks SQL)."""
+# --- Work orders (operational, read + write) ---------------------------------
+
+def open_work_orders(conn: psycopg.Connection) -> list[dict]:
+    """Work orders that aren't closed yet, most urgent first."""
     with conn.cursor(row_factory=dict_row) as cur:
-        cur.execute(f"""
-            SELECT a.machine_id, m.model, a.technician, a.resolution,
-                   a.resolved_at,
-                   round(extract(epoch FROM (a.resolved_at - t.opened_at)) / 3600, 1) AS hours_to_fix
-            FROM {ACTIONS_TABLE} a
-            JOIN machines m ON m.machine_id = a.machine_id
-            LEFT JOIN maintenance_tickets t ON t.ticket_id = a.ticket_id
-            WHERE a.status = 'resolved'
-            ORDER BY a.resolved_at DESC
+        cur.execute("""
+            SELECT wo.work_order_id, wo.machine_id, m.model, wo.priority, wo.title,
+                   wo.description, wo.assigned_to, wo.due_date, wo.status, wo.created_at
+            FROM work_orders wo
+            JOIN machines m ON m.machine_id = wo.machine_id
+            WHERE wo.status <> 'closed'
+            ORDER BY CASE wo.priority WHEN 'critical' THEN 0 WHEN 'high' THEN 1
+                                      WHEN 'medium' THEN 2 ELSE 3 END,
+                     wo.created_at""")
+        return cur.fetchall()
+
+
+def create_work_order(conn: psycopg.Connection, machine_id: int, priority: str, title: str,
+                      description: str, assigned_to: str | None, due_date, status: str) -> None:
+    """Raise a new work order."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """INSERT INTO work_orders
+                   (machine_id, priority, title, description, assigned_to, due_date, status)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            (machine_id, priority, title, description, assigned_to or None, due_date, status))
+    conn.commit()
+
+
+def set_work_order_status(conn: psycopg.Connection, work_order_id: int, status: str) -> None:
+    """Move a work order along its lifecycle (assigned → in_progress → closed)."""
+    with conn.cursor() as cur:
+        cur.execute("UPDATE work_orders SET status = %s WHERE work_order_id = %s",
+                    (status, work_order_id))
+    conn.commit()
+
+
+# --- Quality checks (operational, read + write) ------------------------------
+
+def recent_quality_checks(conn: psycopg.Connection, limit: int = 15) -> list[dict]:
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute("""
+            SELECT q.check_id, q.order_id, q.machine_id, m.model, q.check_type, q.result,
+                   q.defect_code, q.notes, q.inspector, q.checked_at
+            FROM quality_checks q
+            JOIN machines m ON m.machine_id = q.machine_id
+            ORDER BY q.checked_at DESC
             LIMIT %s""", (limit,))
         return cur.fetchall()
+
+
+def record_quality_check(conn: psycopg.Connection, order_id: int, machine_id: int,
+                         check_type: str, result: str, defect_code: str | None,
+                         notes: str, inspector: str) -> None:
+    with conn.cursor() as cur:
+        cur.execute(
+            """INSERT INTO quality_checks
+                   (order_id, machine_id, check_type, result, defect_code, notes, inspector)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            (order_id, machine_id, check_type, result, defect_code or None, notes, inspector))
+    conn.commit()
+
+
+# --- Operator notes (operational, read + write) ------------------------------
+
+def recent_notes(conn: psycopg.Connection, limit: int = 20) -> list[dict]:
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute("""
+            SELECT n.note_id, n.machine_id, m.model, n.note_type, n.content,
+                   n.created_by, n.created_at
+            FROM operator_notes n
+            LEFT JOIN machines m ON m.machine_id = n.machine_id
+            ORDER BY n.created_at DESC
+            LIMIT %s""", (limit,))
+        return cur.fetchall()
+
+
+def add_operator_note(conn: psycopg.Connection, machine_id: int | None, note_type: str,
+                      content: str, created_by: str, ticket_id: int | None = None,
+                      order_id: int | None = None) -> None:
+    with conn.cursor() as cur:
+        cur.execute(
+            """INSERT INTO operator_notes
+                   (machine_id, ticket_id, order_id, note_type, content, created_by)
+               VALUES (%s, %s, %s, %s, %s, %s)""",
+            (machine_id, ticket_id, order_id, note_type, content, created_by))
+    conn.commit()

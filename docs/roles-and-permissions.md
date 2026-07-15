@@ -24,18 +24,22 @@ those with your workspace admin using the pre-flight test at the bottom.
   - A **running SQL warehouse** they can use (`CAN_USE`) — for the round-trip query in step 04.
   - **Databricks Apps enabled**, and users **allowed to create apps** (some workspaces
     restrict app creation to a group — add the user group).
-- **Lakebase** — create the shared **project `lakebase-workshop`** (autoscaling) ahead of time
-  (provisioning takes minutes). Grant users access to the project/branch so they can:
-  create a database, create synced tables, register a UC catalog, and generate DB credentials.
+- **Lakebase** — enabled in the workspace, and users allowed to **create their own projects**
+  (each user creates `lakebase-ws-<user>-N` in Lab 2 — there is no shared project). That lets
+  them create synced tables, create operational tables, register a UC catalog, and generate DB
+  credentials.
+- **Change Data Feed (CDF) preview** — enable it on the workspace **Previews** page (it's a
+  preview feature). Lab 2's Lakebase → UC round-trip depends on it.
 - **Unity Catalog**:
   - Create catalog **`catalog_workshop`**; grant the user group **`USE CATALOG`** +
     **`CREATE SCHEMA`** (each user creates their own `schema_<user>` schema and owns its tables).
-  - Registering the Lakebase database as a UC catalog (`create-catalog`) needs
-    **`CREATE CATALOG` on the metastore**. If you can't grant that to users, either grant it
-    to the group for the session, or pre-register a per-user Lakebase catalog for each user.
+    This catalog also receives the CDF `lb_*_history` output.
+  - Registering the Lakebase database as a UC catalog (`create-catalog`, → `lakebase_schema_<user>`)
+    needs **`CREATE CATALOG` on the metastore**. If you can't grant that to users, grant it to the
+    group for the session.
   - The sync pipelines need a metadata schema — pre-create **`catalog_workshop.pipeline_storage`**
     (or rely on users having `CREATE SCHEMA`).
-- **Pipelines** — snapshot synced tables spin up a Lakeflow/DLT pipeline; confirm users can
+- **Pipelines** — `CONTINUOUS` synced tables spin up a Lakeflow/DLT pipeline; confirm users can
   create pipelines (usually default; a restrictive cluster policy can block it).
 
 ## 2. User privileges
@@ -44,9 +48,9 @@ those with your workspace admin using the pre-flight test at the bottom.
 |-----------|-------|-------|
 | Run Labs 1/2/4 | serverless compute | Labs 2/3 also `%pip install -U databricks-sdk` |
 | Create catalog/schema + tables (Lab 1) | `USE CATALOG` + `CREATE SCHEMA` on `catalog_workshop`; owner of own schema | workspace admin grants the group |
-| Create a Postgres DB, synced tables, register catalog, mint credentials (Lab 2) | access to the `lakebase-workshop` project + `CREATE CATALOG` on the metastore | see admin setup above |
+| Create a Lakebase project, synced tables, operational tables, register catalog, mint credentials (Lab 2) | permission to **create Lakebase projects** + `CREATE CATALOG` on the metastore + CDF preview enabled | see admin setup above |
 | Deploy the app (Lab 3) | permission to **create apps** | creator automatically gets `CAN_MANAGE` on their app |
-| Round-trip query (Lab 4) | `CAN_USE` on a SQL warehouse; read on their Lakebase UC catalog | they own the catalog they registered |
+| Round-trip query (Lab 4) | `CAN_USE` on a SQL warehouse; read on their `catalog_workshop.schema_<user>` schema | they own the schema; CDF lands `lb_*_history` there |
 
 ## 3. App service principal (auto-provisioned at deploy)
 
@@ -56,9 +60,10 @@ resource**. It needs, in Postgres:
 | Grant | Why | Set by |
 |-------|-----|--------|
 | `CONNECT` on the database | connect at all | the resource binding (`CAN_CONNECT_AND_CREATE`) |
-| `USAGE, CREATE ON SCHEMA public` | create its `maintenance_actions` table | **Lab 3, Step 3** |
-| `pg_read_all_data` | `SELECT` on the synced tables — **all current *and future*** tables | **Lab 3, Step 3** |
-| INSERT on `maintenance_actions` | write-back | **implicit** — the app creates & owns that table |
+| `USAGE ON SCHEMA public` | reach the tables | **Lab 3, Step 3** |
+| `pg_read_all_data` | `SELECT` on synced + operational tables — **all current *and future*** tables | **Lab 3, Step 3** |
+| `pg_write_all_data` | `INSERT`/`UPDATE`/`DELETE` on the operational tables (owned by the user) | **Lab 3, Step 3** |
+| `USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public` | `SERIAL` primary keys on the operational tables | **Lab 3, Step 3** |
 
 **Opening the app:** it sits behind workspace SSO. The creator has `CAN_MANAGE`. To let *other*
 people open it (e.g. a shared demo app, or teammates), grant them **`CAN_USE`**:
@@ -74,9 +79,10 @@ Compute → Apps → *app* → Permissions (or `databricks apps set-permissions`
   `GRANT SELECT ON ALL TABLES`:** re-creating a synced table (any re-sync) drops and recreates
   the table, and a point-in-time `GRANT SELECT` does **not** carry over — `pg_read_all_data`
   (a built-in role covering current + future tables) does.
-- **App-table ownership:** the app must create `maintenance_actions` itself so it *owns* it
-  and can `INSERT`. If a human pre-creates that table, the SP can read it (via `pg_read_all_data`)
-  but **cannot write** — the write-back fails. Let the app create it.
+- **Write-back fails / `permission denied`:** the operational tables are owned by the **user**
+  (created in Lab 2), so the app SP needs `pg_write_all_data` *and* `USAGE, SELECT` on the schema's
+  sequences (the `SERIAL` keys). Missing the sequence grant is the usual culprit — the `INSERT`
+  fails on `nextval()`. All three grants are in Lab 3, Step 3.
 - **`CAN_MANAGE` ≠ the app works:** having manage rights on the app lets you *open* it; a runtime
   error is almost always the SP's Postgres grants, not app ACLs.
 

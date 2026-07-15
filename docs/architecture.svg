@@ -84,7 +84,7 @@
   <rect class="chip" x="592" y="430" width="156" height="26" rx="6"/>
   <text class="chiptx" x="670" y="447" text-anchor="middle">synced tables · read-only</text>
   <rect class="chip" x="592" y="464" width="156" height="26" rx="6"/>
-  <text class="chiptx" x="670" y="481" text-anchor="middle">app table · writes</text>
+  <text class="chiptx" x="670" y="481" text-anchor="middle">operational tables · writes</text>
 
   <rect class="node" x="980" y="300" width="188" height="188" rx="12"/>
   <g transform="translate(1042,328)">
@@ -97,7 +97,7 @@
 
   <path class="flow" d="M474,338 L576,338" marker-end="url(#arrow)"/>
   <circle class="badge" cx="500" cy="318" r="12"/><text class="bnum" x="500" y="322" text-anchor="middle">1</text>
-  <text class="flab" x="556" y="322" text-anchor="middle">sync (snapshot)</text>
+  <text class="flab" x="556" y="322" text-anchor="middle">sync (continuous)</text>
 
   <path class="flow" d="M764,346 L980,346" marker-end="url(#arrow)"/>
   <circle class="badge" cx="792" cy="326" r="12"/><text class="bnum" x="792" y="330" text-anchor="middle">2</text>
@@ -109,5 +109,5 @@
 
   <path class="flow" d="M670,516 L670,614 L380,614 L380,480" marker-end="url(#arrow)"/>
   <circle class="badge" cx="524" cy="614" r="12"/><text class="bnum" x="524" y="618" text-anchor="middle">4</text>
-  <text class="flab" x="546" y="640" text-anchor="middle">queryable in Databricks SQL — UC federation, no copy</text>
+  <text class="flab" x="546" y="640" text-anchor="middle">Change Data Feed → lb_*_history (Delta) in Databricks SQL</text>
 </svg>

@@ -11,9 +11,9 @@
 dbutils.library.restartPython()
 
 # COMMAND ----------
-# ⚙️ Set these to the workshop's values, then Run all.
-CATALOG          = "catalog_workshop"   # the Unity Catalog you'll create your schema in
-LAKEBASE_PROJECT = "lakebase-workshop"   # the shared Lakebase (Postgres) project
+# ⚙️ Set this to the workshop's value, then Run all.
+CATALOG = "catalog_workshop"   # the Unity Catalog you'll create your schema in
+# Note: there is no shared Lakebase project — you create your own (lakebase-ws-<you>-N) in Lab 2.
 
 # COMMAND ----------
 import re, uuid
@@ -21,7 +21,7 @@ from databricks.sdk import WorkspaceClient
 
 w = WorkspaceClient()
 user = w.current_user.me().user_name
-slug = re.sub(r"[^a-z0-9]", "_", user.split("@")[0].lower())
+slug = re.sub(r"[^a-z0-9]", "", user.split("@")[0].lower())
 tag  = uuid.uuid4().hex[:6]
 results = []
 
@@ -69,15 +69,12 @@ def warehouse():
     return f"{len(whs)} warehouse(s) visible; running: {running or 'none (start one before Lab 2/4)'}"
 check("SQL warehouse available", warehouse)
 
-# 5 — Lakebase project access (Labs 2 & 3)
+# 5 — Lakebase reachable (you create your own project in Lab 2)
 def lakebase():
-    branch = f"projects/{LAKEBASE_PROJECT}/branches/production"
-    eps = list(w.postgres.list_endpoints(branch))
-    if not eps:
-        raise Exception(f"no endpoint found on project '{LAKEBASE_PROJECT}'")
-    w.postgres.generate_database_credential(f"{branch}/endpoints/primary")  # can you mint a DB token?
-    return f"reached project '{LAKEBASE_PROJECT}' and minted a database credential"
-check("Lakebase project access", lakebase)
+    projects = list(w.postgres.list_projects())
+    return (f"Lakebase API reachable ({len(projects)} project(s) visible) — "
+            "you'll create your own 'lakebase-ws-<you>-N' in Lab 2")
+check("Lakebase reachable", lakebase)
 
 # 6 — Databricks Apps reachable (creating an app is exercised for real in Lab 3)
 def apps():

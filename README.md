@@ -22,8 +22,8 @@ intelligence is trapped in dashboards. When a machine spikes at 2 a.m., the nigh
 technician needs a dead-simple app: *"which machines need attention, and let me log what I
 did."* That's an operational job the lakehouse isn't built for — so you sync the data into
 **Lakebase**, serve it through a **Databricks App** (a Maintenance Cockpit), let the technician
-resolve alerts, and — because Lakebase is governed by Unity Catalog — their work flows straight
-back to analytics. Full write-up: [`docs/scenario.md`](docs/scenario.md).
+log what they did, and — via **Change Data Feed** — their work flows straight back into the
+lakehouse. Full write-up: [`docs/scenario.md`](docs/scenario.md).
 
 ## Before the workshop (workspace admin, once)
 
@@ -48,7 +48,7 @@ checks. The runnable notebooks/app live in [`bundle/src/`](bundle/src).
 |-----|-------|-------|
 | **Lab 0** | Setup — get the repo into your workspace, provision access, choose a start | [guide](labs/Lab%200%20-%20Setup.md) |
 | **Lab 1** | Generate the analytical data in Unity Catalog | [guide](labs/Lab%201%20-%20Generate%20Analytical%20Data.md) |
-| **Lab 2** | Sync it into Lakebase (Postgres) as read-only serving tables | [guide](labs/Lab%202%20-%20Sync%20to%20Lakebase.md) |
+| **Lab 2** | Sync into Lakebase, add operational tables, stream writes back via CDF | [guide](labs/Lab%202%20-%20Sync%20to%20Lakebase.md) |
 | **Lab 3** | Build & deploy the Maintenance Cockpit app; implement the write-back | [guide](labs/Lab%203%20-%20Build%20and%20Deploy%20the%20App.md) |
 | **Lab 4** | Close the round-trip — the app's writes, live in Databricks SQL | [guide](labs/Lab%204%20-%20Close%20the%20Round-Trip.md) |
 
@@ -62,7 +62,7 @@ checks. The runnable notebooks/app live in [`bundle/src/`](bundle/src).
 
 ## What you'll build
 
-`UC Delta ─①sync→ Lakebase synced tables ─②reads→ Streamlit app ─③write-back→ maintenance_actions ─④UC federation→ Databricks SQL`
+`UC Delta ─①CONTINUOUS sync→ Lakebase synced tables ─②reads→ Streamlit app ─③write→ operational tables ─④Change Data Feed→ lb_*_history in Databricks SQL`
 
 One governed platform serves both the analyst and the person on the floor — and their actions
 make the analytics smarter. No second database to secure, no ETL between the two worlds.

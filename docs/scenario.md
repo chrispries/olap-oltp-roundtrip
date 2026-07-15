@@ -37,10 +37,10 @@ the gap Lakebase + Apps close.
 | Stage | What happens | Data |
 |-------|--------------|------|
 | **Analytical (Unity Catalog)** | It's already here | `machines`, `sensor_readings`, `production_orders`, `maintenance_tickets` as Delta tables |
-| **① Sync → Lakebase** | Serve it operationally (millisecond reads) | synced tables in Postgres |
+| **① Sync → Lakebase** | Serve it operationally (millisecond reads) | `CONTINUOUS` synced tables in Postgres |
 | **② Read in the app** | The **Maintenance Cockpit** shows each technician their machines + open alerts | reads the synced tables |
-| **③ Write-back** | Technician logs a fix: *"replaced coolant filter on machine #7 — vibration back to normal"* | new row in the app's Postgres table |
-| **④ Back to analytics** | Because it's governed by Unity Catalog, that action is instantly queryable in SQL — measure repair time, retrain the prediction model | UC federation, no copy |
+| **③ Write-back** | Technician logs a fix: *"replaced coolant filter on machine #7 — vibration back to normal"* — plus work orders, quality checks, notes | rows in the app-owned operational Postgres tables |
+| **④ Back to analytics** | **Change Data Feed** streams every write into the lakehouse as `lb_*_history` Delta tables — measure repair time, retrain the prediction model | CDF, ~15s batches |
 
 ## The payoff line
 
@@ -61,6 +61,7 @@ an open, high-priority maintenance ticket:
 | **#31** | calibration drift |
 | **#44** | spindle (rotating tool) overheating |
 
-So the app opens onto a realistic maintenance queue instead of an empty screen — you can claim
-and resolve one of these alerts right away and watch it flow back to the analytical layer. This
-data is generated deterministically (Lab 1, Step 3), so every run looks the same.
+So the app opens onto a realistic maintenance queue instead of an empty screen — you can log an
+action against one of these alerts right away and watch it flow back to the analytical layer via
+Change Data Feed. This data is generated deterministically (Lab 1, Step 3), so every run looks the
+same.

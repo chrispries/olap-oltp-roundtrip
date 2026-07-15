@@ -2,53 +2,59 @@
 
 ## 🎯 Learning Objectives
 By the end of this lab, you will:
-- Create your own Unity Catalog **schema** and four **Delta** tables of manufacturing / IoT data
-- Understand the **data model** the rest of the workshop uses
-- See how a few machines are seeded to clearly **need attention**, so the app tells a story
+- Create your own **Unity Catalog** schema inside the shared `catalog_workshop` catalog
+- Generate a realistic, **deterministic** manufacturing dataset (machines, telemetry, orders, tickets)
+- Inject a handful of failing machines so the app has a real maintenance queue to work with
+- Land all four tables as governed **Delta tables** — the analytical starting point of the round-trip
 
 ## Introduction
 
-This is stage 1 of the round-trip — the *analytical data you already have* in the lakehouse.
-Everyone shares one catalog (`catalog_workshop`) but gets their **own schema** `schema_<username>`,
-so nobody collides. The data model:
+Every round-trip needs a source of truth. In this lab you create the **analytical layer** — the
+Delta tables that, in a real factory, the data team already owns: machine master data, sensor
+telemetry, production orders, and a history of maintenance tickets.
 
-| Table | Grain | Key columns |
-|-------|-------|-------------|
-| `machines` | one row per machine (50) | `machine_id`, model, line, location |
-| `sensor_readings` | telemetry (10,000) | `reading_id`, `machine_id`, temperature, vibration, load |
-| `production_orders` | orders in flight (200) | `order_id`, `machine_id`, product, qty, status |
-| `maintenance_tickets` | seeded tickets/alerts (120) | `ticket_id`, `machine_id`, priority, status |
+Everything is generated from a **fixed random seed**, so your tables look identical to everyone
+else's — the same four machines will be "failing," which keeps the rest of the workshop
+predictable.
+
+> New to the concepts? Read [`docs/concepts.md`](../docs/concepts.md) (10 min) first.
 
 ## Instructions
 
-Before you start, please verify:
-- You completed **Lab 0** (repo is a Git folder in your workspace).
-- You can run a **serverless** notebook.
+Run the cells below in order in a **serverless Python notebook** in your Git folder. This lab is
+self-contained — you can run it top to bottom in a fresh session.
 
-Create a new Python notebook, attach it to **serverless**, and run each cell below in order.
+### Step 1 — Create your catalog and schema
 
-### Step 1 — Create your catalog + schema
-
-Everyone shares the `catalog_workshop` catalog; you get your own `schema_<username>` schema,
-derived from your login. `CREATE ... IF NOT EXISTS` is safe to re-run.
+Everyone shares the `catalog_workshop` catalog but gets their **own schema**, derived from your
+username, so nobody overwrites anyone else's tables.
 
 ```python
 import re
 
 CATALOG = "catalog_workshop"
 user = spark.sql("SELECT current_user()").first()[0]
-schema = "schema_" + re.sub(r"[^a-z0-9]", "_", user.split("@")[0].lower())
+schema = "schema_" + re.sub(r"[^a-z0-9]", "", user.split("@")[0].lower())
 
 spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
 spark.sql(f"CREATE SCHEMA  IF NOT EXISTS {CATALOG}.{schema}")
 print(f"✅ your target is {CATALOG}.{schema}")
 ```
 
-**✅ Check:** it prints your target, e.g. `catalog_workshop.schema_jane_doe`.
+> **📌 Note your schema name.** The slug strips *everything* that isn't a letter or digit
+> (including dots and underscores), so `jane.doe@acme.com` → schema **`schema_janedoe`**. Every
+> later lab derives the exact same name the same way, so they all line up — just remember what
+> `✅ your target is …` prints here.
 
-### Step 2 — Generate the four tables (deterministic)
+### Step 2 — Generate the manufacturing dataset
 
-It uses a fixed seed, so every participant gets the same results.
+Four related tables, all from one seeded random generator (`rng = np.random.default_rng(42)`),
+so the output is identical on every run:
+
+- **`machines`** (50) — the parent table: model, production line, install date, location.
+- **`sensor_readings`** (10,000) — telemetry: temperature, vibration, load, timestamped.
+- **`production_orders`** (200) — what each machine is scheduled to build.
+- **`maintenance_tickets`** (120) — seeded repair history and open alerts.
 
 ```python
 import numpy as np
@@ -101,10 +107,11 @@ print("generated:", {k: len(v) for k, v in
            production_orders=production_orders, maintenance_tickets=maintenance_tickets).items()})
 ```
 
-### Step 3 — Seed the story: machines that *need attention*
+### Step 3 — Flag four machines for attention
 
-Deterministically plant four machines with elevated vibration **and** an open, high-priority
-ticket, so the app opens like a real maintenance cockpit.
+A demo where nothing is wrong is boring. This pushes four specific machines (**#7, #19, #31,
+#44**) into an alarm state: their recent vibration spikes well above the ~2.5 mm/s norm, and each
+gets an **open, high-priority ticket**. These are the alerts your app opens onto in Lab 3.
 
 ```python
 WATCHLIST = {7: "vibration alarm — bearing wear", 19: "coolant low",
@@ -121,10 +128,10 @@ for i, (mid, fault) in enumerate(WATCHLIST.items()):
 print("watchlist:", list(WATCHLIST))
 ```
 
-### Step 4 — Write to Delta and verify
+### Step 4 — Write the tables to Unity Catalog and verify
 
-`spark.createDataFrame(pandas_df).write.saveAsTable(...)` persists each frame as a governed
-Delta table. The assertion *is* your test — a wrong count fails loudly.
+Save each DataFrame as a governed Delta table in your schema, then assert the row counts so you
+catch any problem here rather than three labs later.
 
 ```python
 frames = {"machines": machines, "sensor_readings": sensor_readings,
@@ -140,20 +147,19 @@ for name, expected in EXPECTED.items():
 print(f"\n✅ All four tables loaded into {CATALOG}.{schema}")
 ```
 
-**✅ Check:** you see `OK` for each table and `✅ All four tables loaded …` (50 / 10000 / 200 / 120).
+**✅ Check:** you see `OK machines: 50`, `sensor_readings: 10000`, `production_orders: 200`,
+`maintenance_tickets: 120`, and the final ✅ line. Open **Catalog ▸ `catalog_workshop` ▸ your
+schema** and you'll see the four tables.
 
 **💡 What just happened?**
-- **Technically:** you created a schema in Unity Catalog for your data to live in, then loaded
-  the plant's data into it as governed **Delta tables** — the machines themselves, the sensor
-  telemetry they stream, and their production orders — plus a set of maintenance tickets that
-  includes current failures on four machines.
-- **In the scenario:** this is the analytical picture the business already has. You now know
-  your fleet of machines, what their sensors are reporting, and which machines have open issues
-  right now. That's the foundation the rest of the round-trip builds on — serving this data to
-  the people on the floor and feeding their actions back.
 
-> **Note:** All labs use the catalog `catalog_workshop` and your per-user schema
-> `schema_<username>` (lowercase, non-alphanumeric → `_`). Example:
-> `jane.doe@acme.com` → `schema_jane_doe`.
+- **Technically:** you created a Unity Catalog schema and wrote four related Delta tables into it
+  — a small but complete analytical model (a parent `machines` table plus telemetry, orders, and
+  tickets that reference it). Because it's generated from a fixed seed, the data is reproducible;
+  because it's Delta in Unity Catalog, it's governed, versioned, and ready to be synced.
+- **In the scenario:** this is the data the factory's **data team already has** — the lakehouse
+  side of the story. It's perfect for analytics (OEE reporting, a vibration-based failure model),
+  but it's not yet in front of the people on the floor. Four machines are now visibly in trouble
+  (#7, #19, #31, #44) — exactly the situation the operational app in Lab 3 needs to surface.
 
 ➡️ **Next: [Lab 2 – Sync to Lakebase](Lab%202%20-%20Sync%20to%20Lakebase.md).**

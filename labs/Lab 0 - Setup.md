@@ -90,8 +90,9 @@ else:
     print(f"⚠️  warehouse '{WAREHOUSE_NAME}' not found — set WAREHOUSE_NAME")
 ```
 
-**Two steps stay manual** (environment/preview-specific): grant the group access to the shared
-**Lakebase project** `lakebase-workshop`, and confirm **Apps creation** is allowed for the group.
+**Steps that stay manual** (environment/preview-specific): confirm users can **create their own
+Lakebase projects**, enable the **Change Data Feed (CDF) preview** on the *Previews* page, and
+confirm **Apps creation** is allowed for the group.
 
 **💡 What just happened?**
 Every participant is now in one group with the rights the labs need, so nobody hits a
@@ -114,7 +115,9 @@ project access, and Apps. Any FAIL → share it with your workspace admin
 ([`docs/access-request-template.md`](../docs/access-request-template.md)).
 
 You should also have:
-- A Lakebase project named **`lakebase-workshop`** — a workspace admin creates it once, or create it yourself (Lab 2 shows how).
+- **Lakebase enabled** and permission to **create a project** — you'll create your own
+  `lakebase-ws-<you>-N` in Lab 2. No shared project to set up.
+- The **CDF preview** enabled (a workspace admin toggles it on the *Previews* page).
 
 ### Step 4 — Choose your starting point
 
@@ -123,7 +126,7 @@ The labs run in order and build on each other. Start at Lab 1.
 | Lab | Topic | Guide |
 |-----|-------|-------|
 | **Lab 1** | Generate the analytical data in Unity Catalog | [guide](Lab%201%20-%20Generate%20Analytical%20Data.md) |
-| **Lab 2** | Sync it into Lakebase (Postgres) as read-only serving tables | [guide](Lab%202%20-%20Sync%20to%20Lakebase.md) |
+| **Lab 2** | Sync into Lakebase, add operational tables, stream writes back via CDF | [guide](Lab%202%20-%20Sync%20to%20Lakebase.md) |
 | **Lab 3** | Build & deploy the Maintenance Cockpit app; implement the write-back | [guide](Lab%203%20-%20Build%20and%20Deploy%20the%20App.md) |
 | **Lab 4** | Close the round-trip — the app's writes, live in Databricks SQL | [guide](Lab%204%20-%20Close%20the%20Round-Trip.md) |
 

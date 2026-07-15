@@ -1,29 +1,45 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Write-back integration test
-# MAGIC Validates `resolve_alert()` against the **real** Lakebase Postgres (there's no local
-# MAGIC test runner — public PyPI is firewalled). Run on serverless with the repo synced as a
-# MAGIC Workspace Git folder.
+# MAGIC Validates `log_maintenance_action()` against the **real** Lakebase Postgres (there's no
+# MAGIC local test runner — public PyPI is firewalled). Run on serverless with the repo synced as
+# MAGIC a Workspace Git folder, after Lab 2 has created your project + operational tables.
 
 # COMMAND ----------
-# MAGIC %pip install -U "databricks-sdk>=0.50" "psycopg[binary]>=3.1" -q
+# MAGIC %pip install -U "databricks-sdk>=0.118.0" "psycopg[binary]>=3.1" -q
 # COMMAND ----------
 dbutils.library.restartPython()
 
 # COMMAND ----------
 # Point db.py at your Lakebase database. The connection mints its own OAuth token via the SDK,
-# so no password is needed here — just host / database / user / endpoint.
+# so no password is needed here — just host / database / user / endpoint. We connect as the human
+# user (the table owner), so no service-principal grants are required for the test.
 import os, re
 from databricks.sdk import WorkspaceClient
 
 w = WorkspaceClient()
 user = w.current_user.me().user_name
-slug = re.sub(r"[^a-z0-9]", "_", user.split("@")[0].lower())
-branch = "projects/lakebase-workshop/branches/production"
+slug = re.sub(r"[^a-z0-9]", "", user.split("@")[0].lower())
+
+# Find your healthy Lakebase project from Lab 2 (lakebase-ws-<slug>-N)
+PROJECT = None
+for i in range(1, 11):
+    candidate = f"lakebase-ws-{slug}-{i}"
+    try:
+        w.postgres.get_project(name=f"projects/{candidate}")
+        list(w.postgres.list_branches(parent=f"projects/{candidate}"))
+        PROJECT = candidate
+        break
+    except Exception:
+        continue
+assert PROJECT, "No healthy Lakebase project found — run Lab 2 first."
+branch = f"projects/{PROJECT}/branches/production"
 
 os.environ["ENDPOINT_NAME"] = f"{branch}/endpoints/primary"
-os.environ["PGHOST"] = w.postgres.list_endpoints(branch).__next__().as_dict()["status"]["hosts"]["host"]
-os.environ["PGDATABASE"] = f"schema_{slug}"
+os.environ["PGHOST"] = next(
+    ep for ep in w.postgres.list_endpoints(parent=branch)
+    if ep.name == f"{branch}/endpoints/primary").status.hosts.host
+os.environ["PGDATABASE"] = "databricks_postgres"
 os.environ["PGUSER"] = user
 
 import sys
@@ -32,22 +48,25 @@ from app import db
 
 # COMMAND ----------
 conn = db.get_connection()
-db.ensure_app_table(conn)
+TAG = "integration-test"
 
-TEST_TICKET = 999001  # synthetic id — won't collide with the seeded alerts
-db.resolve_alert(conn, ticket_id=TEST_TICKET, machine_id=7,
-                 technician="integration-test", resolution="unit-test fix")
+try:
+    db.log_maintenance_action(conn, machine_id=7, ticket_id=None, action_type="inspection",
+                              description="unit-test fix", performed_by=TAG, status="completed")
+except NotImplementedError:
+    print("⏭️  log_maintenance_action() is still the stub — implement it (Lab 3, Step 4) then re-run.")
+    dbutils.notebook.exit("SKIPPED: write-back not implemented yet")
 
 with conn.cursor(row_factory=db.dict_row) as cur:
-    cur.execute(f"SELECT technician, status, resolution FROM {db.ACTIONS_TABLE} WHERE ticket_id = %s",
-                (TEST_TICKET,))
+    cur.execute("SELECT performed_by, status, description FROM maintenance_actions "
+                "WHERE performed_by = %s ORDER BY action_id DESC LIMIT 1", (TAG,))
     row = cur.fetchone()
-assert row and row["status"] == "resolved" and row["resolution"] == "unit-test fix", f"unexpected: {row}"
-print(f"✅ resolve_alert persisted: {row}")
+assert row and row["status"] == "completed" and row["description"] == "unit-test fix", f"unexpected: {row}"
+print(f"✅ log_maintenance_action persisted: {row}")
 
 # COMMAND ----------
-# cleanup the synthetic row
+# cleanup the synthetic row(s)
 with conn.cursor() as cur:
-    cur.execute(f"DELETE FROM {db.ACTIONS_TABLE} WHERE ticket_id = %s", (TEST_TICKET,))
+    cur.execute("DELETE FROM maintenance_actions WHERE performed_by = %s", (TAG,))
 conn.commit()
 print("✅ write-back integration test passed")

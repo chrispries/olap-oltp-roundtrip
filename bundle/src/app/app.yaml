@@ -1,26 +1,28 @@
 # Databricks App config — Streamlit shop-floor maintenance app.
 #
 # Auth model (Lakebase Autoscaling): the app is bound to the Lakebase database as a
-# `postgres` resource (see the runbook), which provisions a Postgres role for the app's
-# service principal. db.py then mints a fresh short-lived OAuth token per connection via
+# `postgres` resource (see Lab 3), which provisions a Postgres role for the app's service
+# principal. db.py then mints a fresh short-lived OAuth token per connection via
 # w.postgres.generate_database_credential(ENDPOINT_NAME) — Autoscaling tokens expire ~1h,
 # so there is deliberately NO static PGPASSWORD here.
 #
-# PORTABILITY: ENDPOINT_NAME and PGHOST are the SHARED workshop instance (same for everyone).
-# Change only PGDATABASE to your own per-user database. PGUSER is intentionally omitted so
-# db.py falls back to DATABRICKS_CLIENT_ID (your app's own service-principal id) automatically.
+# PER-USER: each user creates their own Lakebase project (lakebase-ws-<slug>-N) in Lab 2, so
+# ENDPOINT_NAME and PGHOST differ per user. Lab 3, Step 1 resolves your project and writes the
+# three REPLACE_ME values below for you — you don't hand-edit them. PGDATABASE is always
+# `databricks_postgres` (the default database, required for Change Data Feed). PGUSER is omitted
+# so db.py falls back to DATABRICKS_CLIENT_ID (the app's own service-principal id) automatically.
 command: ["streamlit", "run", "app.py", "--server.port", "8000", "--server.address", "0.0.0.0"]
 env:
   - name: STREAMLIT_GATHER_USAGE_STATS
     value: "false"
+  # projects/<your-project>/branches/production/endpoints/primary — filled in by Lab 3, Step 1.
   - name: ENDPOINT_NAME
-    value: "projects/lakebase-workshop/branches/production/endpoints/primary"
-  - name: PGHOST
-    value: "ep-floral-rain-e1f9l6le.database.eastus2.azuredatabricks.net"
-  # Set to your own database schema_<username>. Notebook 03 fills this in for you; for the
-  # laptop-CLI path, replace REPLACE_ME per docs/03_deploy_app.md.
-  - name: PGDATABASE
     value: "REPLACE_ME"
+  # Your project endpoint's host — filled in by Lab 3, Step 1.
+  - name: PGHOST
+    value: "REPLACE_ME"
+  - name: PGDATABASE
+    value: "databricks_postgres"
   - name: PGPORT
     value: "5432"
   - name: PGSSLMODE
