@@ -83,6 +83,10 @@ from datetime import datetime, timedelta
 # Set random seed for reproducibility - same data every time you run this
 np.random.seed(42)
 
+# Fixed reference date so all timestamps are reproducible run-to-run
+# (aligns with the production due_date anchor below — the dataset is set in mid-2026)
+REFERENCE_DATE = datetime(2026, 7, 15)
+
 # ─── 1. MACHINES TABLE ───
 # 50 production machines across 3 production lines
 # This is your "dimension table" - describes the equipment
@@ -97,7 +101,7 @@ machines = pd.DataFrame({
 # ─── 2. SENSOR READINGS TABLE ───
 # 10,000 IoT sensor readings over the last 30 days
 # This is your "fact table" - time-series measurements
-base_time = datetime.now() - timedelta(days=30)
+base_time = REFERENCE_DATE - timedelta(days=30)
 sensor_readings = pd.DataFrame({
     'reading_id': range(1, 10001),  # Primary key
     'machine_id': np.random.randint(1, 51, 10000),  # Foreign key -> machines
@@ -122,7 +126,7 @@ production_orders = pd.DataFrame({
 # ─── 4. MAINTENANCE TICKETS TABLE ───
 # 120 maintenance tickets over the last 60 days
 # Tracks both preventive maintenance and emergency repairs
-ticket_base = datetime.now() - timedelta(days=60)
+ticket_base = REFERENCE_DATE - timedelta(days=60)
 maintenance_tickets = pd.DataFrame({
     'ticket_id': range(1, 121),  # Primary key
     'machine_id': np.random.randint(1, 51, 120),  # Foreign key -> machines
@@ -157,8 +161,9 @@ display(maintenance_tickets.head())
 
 Before loading, a quick bit of **exploratory analysis**. A machine showing **both** high
 vibration (> 6.0 mm/s, a mechanical warning) **and** high temperature (> 80 °C, overheating) is a
-strong candidate for preventive maintenance. This is exactly the kind of early-warning signal the
-operational app in Lab 3 helps people act on.
+strong candidate for preventive maintenance. We then **open a high-priority maintenance ticket**
+for each flagged machine — so the sensor signal becomes real work that surfaces at the top of the
+app's alert queue in Lab 3.
 
 ```python
 # Filter for dangerous conditions: high vibration AND high temperature
@@ -170,6 +175,16 @@ high_risk = sensor_readings[
 
 print(f"⚠️  High-risk machines (need immediate attention): {high_risk}")
 print(f"   These {len(high_risk)} machines showed both high vibration and temperature")
+
+# Turn that signal into work: give each high-risk machine an OPEN, HIGH-priority ticket, so it
+# surfaces at the top of the app's alert queue in Lab 3 (sensor signal → ticket → app).
+# Overwrite the first rows so the total stays 120.
+for i, mid in enumerate(high_risk):
+    maintenance_tickets.loc[i, ['machine_id', 'priority', 'status', 'description']] = [
+        int(mid), 'high', 'open', 'High vibration + temperature — inspect before failure'
+    ]
+print(f"✅ Opened a high-priority ticket for each — they'll top the app's alert queue in Lab 3")
+
 print(f"\n🔍 Try this: Change the thresholds above and re-run to find different machines!")
 ```
 

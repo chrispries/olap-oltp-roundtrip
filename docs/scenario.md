@@ -50,16 +50,16 @@ the gap Lakebase + Apps close.
 
 ## What you'll see first
 
-The data is generated from a fixed seed (`np.random.seed(42)`), so the machines, faults, and
-priorities are the same on every run (the timestamps are relative to when you run Lab 1). Two
-things stand out immediately:
+The data is generated from a fixed seed (`np.random.seed(42)`) and a fixed reference date, so
+every run looks the same. Two things stand out immediately:
 
-- **A short list of at-risk machines.** Lab 1 runs a quick check for machines showing **both** high
-  vibration (> 6 mm/s) **and** high temperature (> 80 °C) — the classic pre-failure signature — and
-  surfaces the first four. That's the early-warning signal the model would raise.
-- **A live maintenance queue.** Of the 120 seeded tickets, the open ones (roughly a third, with a
-  mix of priorities up to *critical*) are what the app opens onto — so it lands on a realistic
-  queue instead of an empty screen.
+- **At-risk machines become work.** Lab 1 flags the machines showing **both** high vibration
+  (> 6 mm/s) **and** high temperature (> 80 °C) — the classic pre-failure signature — and opens a
+  **high-priority maintenance ticket** for each. The early-warning signal turns into something a
+  technician can act on.
+- **A live, prioritized queue.** Those flagged tickets sit at the top of the app's alert queue
+  (alongside the rest of the 120 seeded tickets), so the app opens onto a realistic queue instead
+  of an empty screen.
 
 Log an action against one of those tickets right away and watch it flow back to the analytical
 layer via Change Data Feed.
