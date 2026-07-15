@@ -786,23 +786,23 @@ else:
 
 # 3. Postgres Tables
 if host:
-    print(f"\n[3] Postgres Tables (public schema):")
+    print(f"\n[3] Postgres Tables:")
     try:
         with psycopg.connect(
             host=host, port=5432, dbname=PGDB, user=user,
-            password=pg_token(), sslmode="require", autocommit=True
+            password=w.postgres.generate_database_credential(endpoint=ENDPOINT).token, sslmode="require", autocommit=True
         ) as conn:
-            # Synced tables (read-only)
-            synced = conn.execute("""
+            # Synced tables (read-only) — live in LAKEBASE_SCHEMA, not public
+            synced = conn.execute(f"""
                 SELECT tablename FROM pg_tables 
-                WHERE schemaname = 'public' 
+                WHERE schemaname = '{LAKEBASE_SCHEMA}' 
                   AND tablename IN ('machines', 'sensor_readings', 'production_orders', 'maintenance_tickets')
                 ORDER BY tablename;
             """).fetchall()
-            print(f"\n  Synced tables (read-only from UC):")
+            print(f"\n  Synced tables (schema: {LAKEBASE_SCHEMA}, read-only from UC):")
             if synced:
                 for (tbl,) in synced:
-                    count = conn.execute(f"SELECT COUNT(*) FROM public.{tbl}").fetchone()[0]
+                    count = conn.execute(f"SELECT COUNT(*) FROM {LAKEBASE_SCHEMA}.{tbl}").fetchone()[0]
                     print(f"    ✅ {tbl:30s} ({count} rows)")
             else:
                 print(f"    ❌ None synced yet - check sync status")
@@ -841,6 +841,12 @@ except Exception as e:
     print(f"  ❌ Could not check: {str(e)[:100]}")
 
 print("\n" + "="*80)
+print("Next Steps:")
+print("="*80)
+print("1. ⚠️  If source tables are missing: Open Lab1 and run it first")
+print("2. ✅ If synced tables exist: Complete manual CDF setup (Cell 10)")
+print("3. ✅ If CDF is running: Check history tables for change events")
+print("="*80)
 ```
 
 **✅ Check:** all four synced tables and all four operational tables show row counts, and the four
