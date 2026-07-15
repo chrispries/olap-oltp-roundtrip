@@ -103,8 +103,18 @@ def machines(conn: psycopg.Connection) -> list[dict]:
         return cur.fetchall()
 
 
-def open_alerts(conn: psycopg.Connection) -> list[dict]:
-    """Open maintenance alerts (seeded tickets), worst priority first.
+# How the alert queue can be ordered. Keys are what the UI passes; values are the SQL ORDER BY.
+# Priority uses a CASE so 'high' sorts before 'medium'/'low' (alphabetical would be wrong).
+_ALERT_SORTS = {
+    "priority": "CASE t.priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END, t.opened_at",
+    "oldest":   "t.opened_at",
+    "machine":  "t.machine_id, t.opened_at",
+}
+
+
+def open_alerts(conn: psycopg.Connection, sort: str = "priority",
+                priority: str | None = None) -> list[dict]:
+    """Open maintenance alerts (seeded tickets), ordered by `sort`.
 
     Reads the read-only `maintenance_tickets` synced table, joins `machines` for context, and
     left-joins the app's own `maintenance_actions` for the latest action on each ticket.
@@ -113,9 +123,19 @@ def open_alerts(conn: psycopg.Connection) -> list[dict]:
     driven by our own `maintenance_actions`: once the latest action on a ticket is 'completed',
     the alert drops off this queue. Tickets with an 'in_progress' action stay, tagged with who's
     on it.
+
+    `sort` is one of `_ALERT_SORTS` (default worst-priority-first); `priority`, if given, keeps
+    only alerts of that severity. Both are validated here, so the UI can pass them straight
+    through without risk of SQL injection.
     """
+    order_by = _ALERT_SORTS.get(sort, _ALERT_SORTS["priority"])
+    params: list = []
+    priority_clause = ""
+    if priority in ("high", "medium", "low"):
+        priority_clause = "AND t.priority = %s"
+        params.append(priority)
     with conn.cursor(row_factory=dict_row) as cur:
-        cur.execute("""
+        cur.execute(f"""
             SELECT t.ticket_id, t.machine_id, m.model, m.line, t.priority, t.description,
                    a.performed_by AS actioned_by, a.status AS action_status
             FROM maintenance_tickets t
@@ -129,8 +149,8 @@ def open_alerts(conn: psycopg.Connection) -> list[dict]:
             ) a ON true
             WHERE t.status = 'open'
               AND (a.status IS NULL OR a.status <> 'completed')   -- hide alerts already completed
-            ORDER BY CASE t.priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
-                     t.opened_at""")
+              {priority_clause}
+            ORDER BY {order_by}""", params)
         return cur.fetchall()
 
 

@@ -16,31 +16,39 @@ st.title("🔧 Maintenance Cockpit")
 st.caption("Reference data served from Lakebase · your writes flow straight back to the lakehouse")
 
 
-def who_am_i() -> str:
-    """Best-effort name of the signed-in user.
+def who_am_i() -> tuple[str, str]:
+    """The signed-in user, taken from the SSO token — never typed in.
 
-    Databricks Apps forward the signed-in identity as request headers; we use the email's local
-    part as a friendly default for the 'You are' field. Falls back to blank (e.g. local dev).
+    Databricks Apps run as a service principal, but still forward the *signed-in* user's identity
+    as request headers. We read it from there and stamp it on every write, so work is always
+    attributed to the real person — you can't log under someone else's name. Returns
+    (email, short_name); falls back to blank in local dev where the headers are absent.
     """
     try:
         h = st.context.headers
         email = h.get("X-Forwarded-Email") or h.get("X-Forwarded-Preferred-Username") or ""
-        return email.split("@")[0]
+        return email, (email.split("@")[0] or email)
     except Exception:
-        return ""
+        return "", ""
 
 
-# --- Sidebar: who's on shift (this name is stamped on everything you log) -----
+user_email, me = who_am_i()
+
+# --- Sidebar: who's on shift (identity comes from your SSO token, read-only) --
 with st.sidebar:
     st.subheader("👷 On shift")
-    me = st.text_input("You are", value=who_am_i(), placeholder="your name")
-    if not me:
-        st.warning("Enter your name above to enable logging.")
+    if me:
+        st.success(f"**{me}**")
+        if user_email and user_email != me:
+            st.caption(user_email)
+        st.caption("From your Databricks sign-in — every entry you save is stamped with this.")
+    else:
+        # Only happens in local dev (no SSO headers); on Databricks you're always identified.
+        st.warning("No signed-in identity found — logging is disabled.")
     st.divider()
     st.markdown("**How to use**")
-    st.caption("1. Enter your name.  2. Pick a tab.  3. Log alerts, work orders, quality "
-               "checks or notes.  Everything you save appears in Databricks SQL within seconds "
-               "(`lb_*_history`) — that's the round-trip.")
+    st.caption("Pick a tab, then log alerts, work orders, quality checks or notes. Everything "
+               "you save appears in Databricks SQL within seconds (`lb_*_history`) — the round-trip.")
 
 # One Lakebase connection per app run; db.py mints a fresh OAuth token for it (no password).
 conn = db.get_connection()
@@ -56,10 +64,10 @@ def pick_machine(key: str, label: str = "Machine"):
     return st.selectbox(label, machine_ids, format_func=lambda i: machine_label.get(i, f"#{i}"), key=key)
 
 
-# Gentle, prominent nudge if we don't know who you are yet (all write buttons stay disabled).
+# Write buttons stay disabled if there's no signed-in identity — only happens in local dev.
 if not me:
-    st.info("👋 **Enter your name in the sidebar** to start logging work — the action buttons "
-            "unlock once we know who's on shift.")
+    st.info("👋 Sign in through Databricks to log work — the action buttons unlock once your "
+            "identity is known.")
 
 alerts_tab, wo_tab, qc_tab, notes_tab = st.tabs(
     ["🔴 Alerts & actions", "📋 Work orders", "✅ Quality checks", "📝 Operator notes"])
@@ -69,7 +77,24 @@ with alerts_tab:
     st.subheader("🔴 Open alerts")
     st.caption("High-priority tickets from the lakehouse (read-only). Log an action and mark it "
                "**Completed** to clear it from this queue.")
-    alerts = db.open_alerts(conn)
+
+    # Sort/filter the queue — handled in SQL (db.open_alerts) so it scales past what's on screen.
+    _SORTS = {"Priority": "priority", "Oldest first": "oldest", "Machine": "machine"}
+    ctrl_l, ctrl_r = st.columns(2)
+    with ctrl_l:
+        sort_label = st.selectbox("Sort by", list(_SORTS), key="alert-sort")
+    with ctrl_r:
+        prio_label = st.selectbox("Show", ["All", "high", "medium", "low"], key="alert-prio")
+    alerts = db.open_alerts(conn, sort=_SORTS[sort_label],
+                            priority=None if prio_label == "All" else prio_label)
+
+    # Cockpit counters — a quick read on the queue before you scroll it.
+    counts = {p: sum(1 for a in alerts if a["priority"] == p) for p in ("high", "medium", "low")}
+    m_total, m_high, m_med = st.columns(3)
+    m_total.metric("Open", len(alerts))
+    m_high.metric("High", counts["high"])
+    m_med.metric("Medium", counts["medium"])
+
     if not alerts:
         st.success("No open alerts — the line is running clean. 🎉")
 
