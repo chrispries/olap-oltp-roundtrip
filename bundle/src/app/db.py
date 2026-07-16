@@ -103,15 +103,39 @@ def machines(conn: psycopg.Connection) -> list[dict]:
         return cur.fetchall()
 
 
-def open_alerts(conn: psycopg.Connection) -> list[dict]:
-    """Open maintenance alerts (seeded tickets), worst priority first.
+# How the alert queue can be ordered. Keys are what the UI passes; values are the SQL ORDER BY.
+# Priority uses a CASE so 'high' sorts before 'medium'/'low' (alphabetical would be wrong).
+_ALERT_SORTS = {
+    "priority": "CASE t.priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END, t.opened_at",
+    "oldest":   "t.opened_at",
+    "machine":  "t.machine_id, t.opened_at",
+}
+
+
+def open_alerts(conn: psycopg.Connection, sort: str = "priority",
+                priority: str | None = None) -> list[dict]:
+    """Open maintenance alerts (seeded tickets), ordered by `sort`.
 
     Reads the read-only `maintenance_tickets` synced table, joins `machines` for context, and
-    left-joins the app's own `maintenance_actions` so we can show whether anyone has logged work
-    against the ticket yet.
+    left-joins the app's own `maintenance_actions` for the latest action on each ticket.
+
+    The synced ticket table is read-only (its `status` never changes), so "closing" an alert is
+    driven by our own `maintenance_actions`: once the latest action on a ticket is 'completed',
+    the alert drops off this queue. Tickets with an 'in_progress' action stay, tagged with who's
+    on it.
+
+    `sort` is one of `_ALERT_SORTS` (default worst-priority-first); `priority`, if given, keeps
+    only alerts of that severity. Both are validated here, so the UI can pass them straight
+    through without risk of SQL injection.
     """
+    order_by = _ALERT_SORTS.get(sort, _ALERT_SORTS["priority"])
+    params: list = []
+    priority_clause = ""
+    if priority in ("high", "medium", "low"):
+        priority_clause = "AND t.priority = %s"
+        params.append(priority)
     with conn.cursor(row_factory=dict_row) as cur:
-        cur.execute("""
+        cur.execute(f"""
             SELECT t.ticket_id, t.machine_id, m.model, m.line, t.priority, t.description,
                    a.performed_by AS actioned_by, a.status AS action_status
             FROM maintenance_tickets t
@@ -124,8 +148,9 @@ def open_alerts(conn: psycopg.Connection) -> list[dict]:
                 LIMIT 1
             ) a ON true
             WHERE t.status = 'open'
-            ORDER BY CASE t.priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
-                     t.opened_at""")
+              AND (a.status IS NULL OR a.status <> 'completed')   -- hide alerts already completed
+              {priority_clause}
+            ORDER BY {order_by}""", params)
         return cur.fetchall()
 
 
@@ -150,19 +175,15 @@ def recent_actions(conn: psycopg.Connection, limit: int = 15) -> list[dict]:
 def log_maintenance_action(conn: psycopg.Connection, machine_id: int, ticket_id: int | None,
                            action_type: str, description: str, performed_by: str,
                            status: str) -> None:
-    """Record a maintenance action in `maintenance_actions`.
+    """TODO — implement this (Lab 3, Step 4 walks you through it).
 
-    `completed_at` is stamped only when the action is logged as completed. `performed_at`
-    defaults to now() in the table. CDF streams this write back to UC as
-    `lb_maintenance_actions_history`.
+    Insert a row into `maintenance_actions` recording the work: the machine, the ticket it
+    relates to (may be None), the `action_type` ('preventive' | 'corrective' | 'inspection'),
+    a free-text `description`, who did it (`performed_by`), and its `status` ('in_progress' |
+    'completed' | 'cancelled'). If status is 'completed', also set `completed_at = now()`.
+    Remember to commit. The completed version is shown in Lab 3, Step 4.
     """
-    with conn.cursor() as cur:
-        cur.execute(
-            """INSERT INTO maintenance_actions
-                   (machine_id, ticket_id, action_type, description, performed_by, status, completed_at)
-               VALUES (%s, %s, %s, %s, %s, %s, CASE WHEN %s = 'completed' THEN now() END)""",
-            (machine_id, ticket_id, action_type, description, performed_by, status, status))
-    conn.commit()
+    raise NotImplementedError("Not implemented yet — see Lab 3, Step 4.")
 
 
 # --- Work orders (operational, read + write) ---------------------------------
